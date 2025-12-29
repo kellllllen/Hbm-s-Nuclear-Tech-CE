@@ -582,21 +582,38 @@ public abstract class TileEntityRBMKBase extends TileEntityLoadedBase implements
 	}
 	
 	//Family and Friends
-	private void getFF(int x, int y, int z) {
+    // iterative BFS version to prevent stack overflow
+    private void getFF(int x, int y, int z) {
 
-		TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+        Queue<BlockPos> queue = new LinkedList<>();
+        queue.add(new BlockPos(x, y, z));
 
-		if(te instanceof TileEntityRBMKBase rbmk) {
+        // Safety limit to prevent server freeze on world-edited mega structures
+        int safetyLimit = 50000;
 
-            if(!columns.contains(rbmk)) {
-				columns.add(rbmk);
-				getFF(x + 1, y, z);
-				getFF(x - 1, y, z);
-				getFF(x, y, z + 1);
-				getFF(x, y, z - 1);
-			}
-		}
-	}
+        while(!queue.isEmpty() && safetyLimit > 0) {
+            safetyLimit--;
+            BlockPos current = queue.poll();
+
+            // prevent loading unloaded chunks during meltdown
+            if (!world.isBlockLoaded(current)) continue;
+
+            TileEntity te = world.getTileEntity(current);
+
+            if(te instanceof TileEntityRBMKBase rbmk) {
+
+                if(!columns.contains(rbmk)) {
+                    columns.add(rbmk);
+
+                    // Add neighbors to queue
+                    queue.add(current.add(1, 0, 0));
+                    queue.add(current.add(-1, 0, 0));
+                    queue.add(current.add(0, 0, 1));
+                    queue.add(current.add(0, 0, -1));
+                }
+            }
+        }
+    }
 	
 	public boolean isModerated() {
 		return false;
