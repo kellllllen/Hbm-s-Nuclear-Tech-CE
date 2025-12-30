@@ -145,7 +145,7 @@ public final class MpscLinkedAtomicLongQueue extends MpscLinkedAtomicLongQueuePa
 
 abstract class MpscLinkedAtomicLongQueuePad0 {
     @SuppressWarnings("unused")
-    long p00, p01, p02, p03, p04, p05; // 48B
+    long p00, p01, p02, p03, p04, p05, p06; // 56B
 }
 
 abstract class MpscLinkedAtomicLongQueueProducerNodeRef extends MpscLinkedAtomicLongQueuePad0 {

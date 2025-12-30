@@ -439,9 +439,45 @@ public abstract sealed class AbstractUnsafe permits InternalUnsafeWrapper, SunUn
 
     public abstract <T extends Throwable> void copyMemory(Object srcBase, long srcOffset, Object destBase, long destOffset, long bytes) throws T;
 
+    // Byte
+    public abstract <T extends Throwable> byte getByte(long address) throws T;
+
+    public abstract <T extends Throwable> void putByte(long address, byte x) throws T;
+
+    // Short
+    public abstract <T extends Throwable> short getShort(long address) throws T;
+
+    public abstract <T extends Throwable> void putShort(long address, short x) throws T;
+
+    // Char
+    public abstract <T extends Throwable> char getChar(long address) throws T;
+
+    public abstract <T extends Throwable> void putChar(long address, char x) throws T;
+
+    // Int
+    public abstract <T extends Throwable> int getInt(long address) throws T;
+
+    public abstract <T extends Throwable> void putInt(long address, int x) throws T;
+
+    // Long
     public abstract <T extends Throwable> long getLong(long address) throws T;
 
-    public abstract <T extends Throwable> void putLong(long address, long value) throws T;
+    public abstract <T extends Throwable> void putLong(long address, long x) throws T;
+
+    // Float
+    public abstract <T extends Throwable> float getFloat(long address) throws T;
+
+    public abstract <T extends Throwable> void putFloat(long address, float x) throws T;
+
+    // Double
+    public abstract <T extends Throwable> double getDouble(long address) throws T;
+
+    public abstract <T extends Throwable> void putDouble(long address, double x) throws T;
+
+    // Address
+    public abstract <T extends Throwable> long getAddress(long address) throws T;
+
+    public abstract <T extends Throwable> void putAddress(long address, long x) throws T;
 
 
     // ================================================================================================================

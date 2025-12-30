@@ -43,9 +43,6 @@ import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -125,6 +122,14 @@ public final class RadiationSystemNT {
     private static double fogThreshold = 0.0D;
 
     static {
+        long off0 = fieldOffset(ChunkRefM0.class, "mask0");
+        long off1 = fieldOffset(ChunkRefM1.class, "mask1");
+        long off2 = fieldOffset(ChunkRefM2.class, "mask2");
+        long off3 = fieldOffset(ChunkRef.class, "mask3");
+        if (off1 - off0 != 64 || off2 - off1 != 64 || off3 - off2 != 64) {
+            throw new AssertionError("Critical memory layout mismatch. Expected 64-byte strides for mask fields, " +
+                    "but got: " + off0 + ", " + off1 + ", " + off2 + ", " + off3);
+        }
         int[] rowShifts = {4, 4, 8, 8, 8, 8}, colShifts = {0, 0, 0, 0, 4, 4}, bases = {0, 15 << 8, 0, 15 << 4, 0, 15};
         for (int face = 0; face < 6; face++) {
             int base = face << 8;
@@ -175,17 +180,16 @@ public final class RadiationSystemNT {
         UU_E = Math.exp(-(diffusionDt / 128.0d));
     }
 
-    public static void onServerStarting(FMLServerStartingEvent event) {
-    }
-
-    public static void onServerStopping(FMLServerStoppingEvent ignoredEvent) {
+    public static void onServerStopping() {
         try {
             radiationFuture.join();
         } catch (Exception e) {
             MainRegistry.logger.error("Radiation system error during shutdown.", e);
-        } finally {
-            worldMap.clear();
         }
+    }
+
+    public static void onServerStopped() {
+        worldMap.clear();
     }
 
     public static CompletableFuture<Void> onServerTickLast(TickEvent.ServerTickEvent e) {
@@ -1612,7 +1616,7 @@ public final class RadiationSystemNT {
         ChunkRefHeader(long ck) { this.ck = ck; }
     }
     private static abstract class ChunkRefPad0 extends ChunkRefHeader {
-        @SuppressWarnings("unused") long p00, p01; // 16B
+        @SuppressWarnings("unused") long p00, p01, p02, p03, p04, p05, p06; // 56B
         ChunkRefPad0(long ck) { super(ck); }
     }
     private static abstract class ChunkRefM0 extends ChunkRefPad0 { long mask0; ChunkRefM0(long ck) { super(ck); } }
@@ -1630,14 +1634,9 @@ public final class RadiationSystemNT {
         @SuppressWarnings("unused") long p30, p31, p32, p33, p34, p35, p36; // 56B
         ChunkRefPad3(long ck) { super(ck); }
     }
-    private static abstract class ChunkRefM3 extends ChunkRefPad3 { long mask3; ChunkRefM3(long ck) { super(ck); } }
-    private static abstract class ChunkRefPad4 extends ChunkRefM3 {
-        @SuppressWarnings("unused") long p40, p41, p42, p43, p44, p45, p46; // 56B
-        ChunkRefPad4(long ck) { super(ck); }
-    }
     // @formatter:on
 
-    private static final class ChunkRef extends ChunkRefPad4 {
+    private static final class ChunkRef extends ChunkRefPad3 {
         static final long MASK_BASE = fieldOffset(ChunkRefM0.class, "mask0");
         static final long TOUCHED_EPOCH_OFF = fieldOffset(ChunkRef.class, "touchedEpoch");
         static final int KIND_NONE = 0;
@@ -1645,7 +1644,8 @@ public final class RadiationSystemNT {
         static final int KIND_SINGLE = 2;
         static final int KIND_MULTI = 3;
 
-        int touchedEpoch;
+        // touchedEpoch stored as long to avoid -XX:+CompactFields reordering
+        long mask3, touchedEpoch;
 
         ChunkRef(long ck) {
             super(ck);
@@ -1705,10 +1705,10 @@ public final class RadiationSystemNT {
             }
         }
 
-        boolean tryMarkTouched(int epoch) {
-            int cur = touchedEpoch;
+        boolean tryMarkTouched(long epoch) {
+            long cur = touchedEpoch;
             if (cur == epoch) return false;
-            return U.compareAndSetInt(this, TOUCHED_EPOCH_OFF, cur, epoch);
+            return U.compareAndSetLong(this, TOUCHED_EPOCH_OFF, cur, epoch);
         }
     }
 
@@ -3612,7 +3612,8 @@ public final class RadiationSystemNT {
     }
 
     private static final class LongBag {
-        static final int CHUNK_SHIFT = 14;
+        // setting to 14 would BREAK Java 25 compatibility, I have NO IDEA how
+        static final int CHUNK_SHIFT = 10;
         static final int CHUNK_SIZE = 1 << CHUNK_SHIFT;
         static final int CHUNK_MASK = CHUNK_SIZE - 1;
         static final long SIZE_OFF = fieldOffset(LongBag.class, "size");

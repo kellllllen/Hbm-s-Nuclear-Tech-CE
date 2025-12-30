@@ -21,7 +21,6 @@ import com.hbm.lib.ForgeDirection;
 import com.hbm.tileentity.IGUIProvider;
 import com.hbm.tileentity.machine.rbmk.TileEntityRBMKConsole.ColumnType;
 import com.hbm.util.BufferUtil;
-import com.hbm.util.MutableVec3d;
 import com.hbm.util.ParticleUtil;
 import io.netty.buffer.ByteBuf;
 import li.cil.oc.api.machine.Arguments;
@@ -39,6 +38,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
@@ -66,13 +66,11 @@ public class TileEntityRBMKRod extends TileEntityRBMKSlottedBase implements IRBM
 	private String fuelXenon;
 	private String fuelHeat;
 
-    private static final MutableVec3d VEC_UP = new MutableVec3d(0, 1, 0);
-
-    private static final MutableVec3d[] NEUTRON_VECTORS = {
-            new MutableVec3d(0, 0, -1), // NORTH
-            new MutableVec3d(1, 0, 0),  // EAST
-            new MutableVec3d(0, 0, 1),  // SOUTH
-            new MutableVec3d(-1, 0, 0)  // WEST
+    private static final Vec3d[] NEUTRON_VECTORS = {
+            new Vec3d(0, 0, -1), // NORTH
+            new Vec3d(1, 0, 0),  // EAST
+            new Vec3d(0, 0, 1),  // SOUTH
+            new Vec3d(-1, 0, 0)  // WEST
     };
 
     private int cherenkovVisualTimer = 0;
@@ -243,8 +241,8 @@ public class TileEntityRBMKRod extends TileEntityRBMKSlottedBase implements IRBM
             streamWorld.addNode(node);
         }
 
-        for(int i = 0; i < NEUTRON_VECTORS.length; i++) {
-            new RBMKNeutronHandler.RBMKNeutronStream(node, NEUTRON_VECTORS[i], flux, ratio);
+        for (Vec3d neutronVector : NEUTRON_VECTORS) {
+            new RBMKNeutronHandler.RBMKNeutronStream(node, neutronVector, flux, ratio);
         }
     }
 	

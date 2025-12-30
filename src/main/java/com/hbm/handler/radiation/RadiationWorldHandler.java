@@ -3,7 +3,6 @@ package com.hbm.handler.radiation;
 import com.hbm.blocks.ModBlocks;
 import com.hbm.config.GeneralConfig;
 import com.hbm.config.RadiationConfig;
-import com.hbm.main.MainRegistry;
 import net.minecraft.block.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -16,18 +15,7 @@ class RadiationWorldHandler {
 
     static void handleWorldDestruction(WorldServer world) {
         if (!RadiationConfig.worldRadEffects || !GeneralConfig.enableRads) return;
-        handleAdvancedDestruction(world);
-    }
-
-    private static void handleAdvancedDestruction(WorldServer world) {
-        if (GeneralConfig.enableDebugMode) {
-            MainRegistry.logger.info("[Debug] Starting advanced world destruction processing");
-        }
         RadiationSystemNT.handleWorldDestruction(world);
-
-        if (GeneralConfig.enableDebugMode) {
-            MainRegistry.logger.info("[Debug] Finished advanced world destruction processing");
-        }
     }
 
     static void decayBlock(World world, BlockPos pos, IBlockState state, boolean isLegacy) {

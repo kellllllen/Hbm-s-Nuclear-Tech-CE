@@ -193,7 +193,7 @@ final class MpscUnboundedXaddChunkLong extends MpUnboundedXaddChunkLong<MpscUnbo
 
 abstract class MpUnboundedXaddArrayLongQueuePad0 {
     @SuppressWarnings("unused")
-    long p00, p01, p02, p03, p04, p05; // 48B
+    long p00, p01, p02, p03, p04, p05, p06; // 56B
 }
 
 abstract class MpUnboundedXaddArrayLongQueueProducerFields<R extends MpUnboundedXaddChunkLong<R>> extends MpUnboundedXaddArrayLongQueuePad0 {

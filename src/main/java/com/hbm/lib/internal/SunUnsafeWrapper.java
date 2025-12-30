@@ -856,12 +856,68 @@ public final class SunUnsafeWrapper extends AbstractUnsafe {
         sunUnsafe.copyMemory(srcBase, srcOffset, destBase, destOffset, bytes);
     }
 
+    public <T extends Throwable> byte getByte(long address) throws T {
+        return sunUnsafe.getByte(address);
+    }
+
+    public <T extends Throwable> void putByte(long address, byte x) throws T {
+        sunUnsafe.putByte(address, x);
+    }
+
+    public <T extends Throwable> short getShort(long address) throws T {
+        return sunUnsafe.getShort(address);
+    }
+
+    public <T extends Throwable> void putShort(long address, short x) throws T {
+        sunUnsafe.putShort(address, x);
+    }
+
+    public <T extends Throwable> char getChar(long address) throws T {
+        return sunUnsafe.getChar(address);
+    }
+
+    public <T extends Throwable> void putChar(long address, char x) throws T {
+        sunUnsafe.putChar(address, x);
+    }
+
+    public <T extends Throwable> int getInt(long address) throws T {
+       return sunUnsafe.getInt(address);
+    }
+
+    public <T extends Throwable> void putInt(long address, int x) throws T {
+        sunUnsafe.putInt(address, x);
+    }
+
     public <T extends Throwable> long getLong(long address) throws T {
         return sunUnsafe.getLong(address);
     }
 
     public <T extends Throwable> void putLong(long address, long value) throws T {
         sunUnsafe.putLong(address, value);
+    }
+
+    public <T extends Throwable> float getFloat(long address) throws T {
+        return sunUnsafe.getFloat(address);
+    }
+
+    public <T extends Throwable> void putFloat(long address, float x) throws T {
+        sunUnsafe.putFloat(address, x);
+    }
+
+    public <T extends Throwable> double getDouble(long address) throws T {
+        return sunUnsafe.getDouble(address);
+    }
+
+    public <T extends Throwable> void putDouble(long address, double x) throws T {
+        sunUnsafe.putDouble(address, x);
+    }
+
+    public <T extends Throwable> long getAddress(long address) throws T {
+        return sunUnsafe.getAddress(address);
+    }
+
+    public <T extends Throwable> void putAddress(long address, long x) throws T {
+        sunUnsafe.putAddress(address, x);
     }
 
     public <T extends Throwable> void loadFence() throws T {
@@ -884,7 +940,6 @@ public final class SunUnsafeWrapper extends AbstractUnsafe {
         sunUnsafe.unpark(thread);
     }
 
-    @Override
     public <T extends Throwable> void throwException(Throwable ee) throws T {
         sunUnsafe.throwException(ee);
     }

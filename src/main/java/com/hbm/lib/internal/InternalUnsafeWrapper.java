@@ -52,7 +52,11 @@ final class InternalUnsafeWrapper extends AbstractUnsafe {
     private static final MethodHandle WEAK_COMPARE_AND_SET_DOUBLE, WEAK_COMPARE_AND_SET_DOUBLE_ACQUIRE, WEAK_COMPARE_AND_SET_DOUBLE_RELEASE, WEAK_COMPARE_AND_SET_DOUBLE_PLAIN;
     private static final MethodHandle COMPARE_AND_EXCHANGE_DOUBLE, COMPARE_AND_EXCHANGE_DOUBLE_ACQUIRE, COMPARE_AND_EXCHANGE_DOUBLE_RELEASE;
 
-    private static final MethodHandle ALLOCATE_MEMORY, FREE_MEMORY, REALLOCATE_MEMORY, SET_MEMORY, COPY_MEMORY, GET_LONG_ADDRESS, PUT_LONG_ADDRESS, ALLOCATE_UNINITIALIZED_ARRAY;
+    private static final MethodHandle ALLOCATE_MEMORY, FREE_MEMORY, REALLOCATE_MEMORY, SET_MEMORY, COPY_MEMORY, ALLOCATE_UNINITIALIZED_ARRAY;
+    private static final MethodHandle GET_BYTE_ADDRESS, PUT_BYTE_ADDRESS, GET_SHORT_ADDRESS, PUT_SHORT_ADDRESS, GET_CHAR_ADDRESS, PUT_CHAR_ADDRESS;
+    private static final MethodHandle GET_INT_ADDRESS, PUT_INT_ADDRESS, GET_LONG_ADDRESS, PUT_LONG_ADDRESS;
+    private static final MethodHandle GET_FLOAT_ADDRESS, PUT_FLOAT_ADDRESS, GET_DOUBLE_ADDRESS, PUT_DOUBLE_ADDRESS;
+    private static final MethodHandle GET_ADDRESS_ADDRESS, PUT_ADDRESS_ADDRESS;
     private static final MethodHandle LOAD_FENCE, STORE_FENCE, FULL_FENCE, PARK, UNPARK, THROW_EXCEPTION;
 
     static {// @formatter:off
@@ -319,8 +323,24 @@ final class InternalUnsafeWrapper extends AbstractUnsafe {
             REALLOCATE_MEMORY = binder.bind("reallocateMemory", long.class, long.class, long.class);
             SET_MEMORY = binder.bind("setMemory", void.class, long.class, long.class, byte.class);
             COPY_MEMORY = binder.bind("copyMemory", void.class, Object.class, long.class, Object.class, long.class, long.class);
+
+            // Raw Primitive Access
+            GET_BYTE_ADDRESS = binder.bind("getByte", byte.class, long.class);
+            PUT_BYTE_ADDRESS = binder.bind("putByte", void.class, long.class, byte.class);
+            GET_SHORT_ADDRESS = binder.bind("getShort", short.class, long.class);
+            PUT_SHORT_ADDRESS = binder.bind("putShort", void.class, long.class, short.class);
+            GET_CHAR_ADDRESS = binder.bind("getChar", char.class, long.class);
+            PUT_CHAR_ADDRESS = binder.bind("putChar", void.class, long.class, char.class);
+            GET_INT_ADDRESS = binder.bind("getInt", int.class, long.class);
+            PUT_INT_ADDRESS = binder.bind("putInt", void.class, long.class, int.class);
             GET_LONG_ADDRESS = binder.bind("getLong", long.class, long.class);
             PUT_LONG_ADDRESS = binder.bind("putLong", void.class, long.class, long.class);
+            GET_FLOAT_ADDRESS = binder.bind("getFloat", float.class, long.class);
+            PUT_FLOAT_ADDRESS = binder.bind("putFloat", void.class, long.class, float.class);
+            GET_DOUBLE_ADDRESS = binder.bind("getDouble", double.class, long.class);
+            PUT_DOUBLE_ADDRESS = binder.bind("putDouble", void.class, long.class, double.class);
+            GET_ADDRESS_ADDRESS = binder.bind("getAddress", long.class, long.class);
+            PUT_ADDRESS_ADDRESS = binder.bind("putAddress", void.class, long.class, long.class);
 
             // --- 12. Fences & Misc ---
             LOAD_FENCE = binder.bind("loadFence", void.class);
@@ -1689,6 +1709,69 @@ final class InternalUnsafeWrapper extends AbstractUnsafe {
             throw (T) t;
         }
     }
+    public <T extends Throwable> byte getByte(long address) throws T {
+        try {
+            return (byte) GET_BYTE_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putByte(long address, byte x) throws T {
+        try {
+            PUT_BYTE_ADDRESS.invokeExact(address, x);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> short getShort(long address) throws T {
+        try {
+            return (short) GET_SHORT_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putShort(long address, short x) throws T {
+        try {
+            PUT_SHORT_ADDRESS.invokeExact(address, x);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> char getChar(long address) throws T {
+        try {
+            return (char) GET_CHAR_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putChar(long address, char x) throws T {
+        try {
+            PUT_CHAR_ADDRESS.invokeExact(address, x);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> int getInt(long address) throws T {
+        try {
+            return (int) GET_INT_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putInt(long address, int x) throws T {
+        try {
+            PUT_INT_ADDRESS.invokeExact(address, x);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
 
     public <T extends Throwable> long getLong(long address) throws T {
         try {
@@ -1701,6 +1784,54 @@ final class InternalUnsafeWrapper extends AbstractUnsafe {
     public <T extends Throwable> void putLong(long address, long value) throws T {
         try {
             PUT_LONG_ADDRESS.invokeExact(address, value);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> float getFloat(long address) throws T {
+        try {
+            return (float) GET_FLOAT_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putFloat(long address, float x) throws T {
+        try {
+            PUT_FLOAT_ADDRESS.invokeExact(address, x);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> double getDouble(long address) throws T {
+        try {
+            return (double) GET_DOUBLE_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putDouble(long address, double x) throws T {
+        try {
+            PUT_DOUBLE_ADDRESS.invokeExact(address, x);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> long getAddress(long address) throws T {
+        try {
+            return (long) GET_ADDRESS_ADDRESS.invokeExact(address);
+        } catch (Throwable t) {
+            throw (T) t;
+        }
+    }
+
+    public <T extends Throwable> void putAddress(long address, long x) throws T {
+        try {
+            PUT_ADDRESS_ADDRESS.invokeExact(address, x);
         } catch (Throwable t) {
             throw (T) t;
         }

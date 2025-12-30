@@ -467,15 +467,19 @@ public class MainRegistry {
         AdvancementManager.init(evt.getServer());
         //MUST be initialized AFTER achievements!!
         BobmazonOfferFactory.init();
-        RadiationSystemNT.onServerStarting(evt);
     }
 
     @EventHandler
     public void serverStopping(FMLServerStoppingEvent evt) {
-        RadiationSystemNT.onServerStopping(evt);
+        RadiationSystemNT.onServerStopping();
         ChunkUtil.onServerStopping();
         RecipesCommon.onServerStopping();
         ModEventHandler.RBMK_COL_HEIGHT_MAP.clear();
+    }
+
+    @EventHandler
+    public void serverStopped(FMLServerStoppedEvent evt) {
+        RadiationSystemNT.onServerStopped();
     }
 
     @EventHandler

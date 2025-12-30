@@ -78,10 +78,6 @@ public abstract class TileEntityRBMKBase extends TileEntityLoadedBase implements
 	public int reasimSteam;
 	public static final int maxSteam = 16000;
 
-    private double prevHeat;
-    private int prevWater;
-    private int prevSteam;
-
     @SideOnly(Side.CLIENT)
     private static long lastDODDUpdate = 0;
     @SideOnly(Side.CLIENT)
@@ -378,10 +374,8 @@ public abstract class TileEntityRBMKBase extends TileEntityLoadedBase implements
         ScaledResolution resolution = event.getResolution();
 
         if (mop != null && mop.typeOfHit == RayTraceResult.Type.BLOCK && world.getBlockState(mop.getBlockPos()).getBlock() instanceof RBMKBase rbmk) {
-            int[] pos = rbmk.findCore(world, mop.getBlockPos().getX(), mop.getBlockPos().getY(), mop.getBlockPos().getZ());
-            if (pos == null) return;
-
-            BlockPos currentPos = new BlockPos(pos[0], pos[1], pos[2]);
+            BlockPos currentPos = rbmk.findCore(world, mop.getBlockPos());
+            if (currentPos == null) return;
             long currentTime = System.currentTimeMillis();
 
             if (currentTime - lastDODDUpdate > 50 || !currentPos.equals(lastDODDPos)) {
@@ -623,7 +617,7 @@ public abstract class TileEntityRBMKBase extends TileEntityLoadedBase implements
     // iterative BFS version to prevent stack overflow
     private void getFF(int x, int y, int z) {
 
-        Queue<BlockPos> queue = new LinkedList<>();
+        Queue<BlockPos> queue = new ArrayDeque<>();
         queue.add(new BlockPos(x, y, z));
 
         // Safety limit to prevent server freeze on world-edited mega structures

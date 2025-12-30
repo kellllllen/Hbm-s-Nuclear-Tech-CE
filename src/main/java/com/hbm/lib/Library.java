@@ -29,6 +29,7 @@ import com.hbm.main.MainRegistry;
 import com.hbm.tileentity.TileEntityMachineBase;
 import com.hbm.util.BobMathUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ByteProcessor;
 import it.unimi.dsi.fastutil.HashCommon;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
@@ -84,6 +85,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.*;
 
+import static com.hbm.lib.internal.UnsafeHolder.*;
 import static net.minecraft.nbt.CompressedStreamTools.writeCompressed;
 
 @Spaghetti("this whole class")
@@ -1963,11 +1965,27 @@ public static boolean canConnect(IBlockAccess world, BlockPos pos, ForgeDirectio
     public static long fnv1A(ByteBuf buf) {
         long hash = 0xcbf29ce484222325L;
         int len = buf.readableBytes();
-        int start = buf.readerIndex();
-        for (int i = 0; i < len; i++) {
-            byte b = buf.getByte(start + i);
-            hash ^= (b & 0xff);
-            hash *= 0x1099511628211L;
+        if (buf.hasMemoryAddress()) {
+            long addr = buf.memoryAddress() + buf.readerIndex();
+            long end = addr + len;
+            for (; addr < end; addr++) {
+                hash ^= (U.getByte(addr) & 0xffL);
+                hash *= 0x100000001b3L;
+            }
+        } else if (buf.hasArray()) {
+            byte[] arr = buf.array();
+            long offset = BA_BASE + buf.arrayOffset() + buf.readerIndex();
+            long end = offset + len;
+            for (; offset < end; offset++) {
+                hash ^= (U.getByte(arr, offset) & 0xffL);
+                hash *= 0x100000001b3L;
+            }
+        } else {
+            int start = buf.readerIndex();
+            for (int i = 0; i < len; i++) {
+                hash ^= (buf.getByte(start + i) & 0xffL);
+                hash *= 0x100000001b3L;
+            }
         }
         return hash;
     }
