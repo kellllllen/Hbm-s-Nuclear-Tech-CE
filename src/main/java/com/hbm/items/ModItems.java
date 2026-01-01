@@ -1288,8 +1288,6 @@ public class ModItems {
     public static final Item solid_fuel_presto_triplet_bf = new ItemBakedBase("solid_fuel_presto_triplet_bf").setCreativeTab(MainRegistry.partsTab);
     public static final Item rocket_fuel = new ItemFuel("rocket_fuel", 6400).setCreativeTab(MainRegistry.partsTab);
     public static final Item briquette = new ItemEnumMulti("briquette", EnumBriquetteType.class, true, true).setCreativeTab(MainRegistry.partsTab);
-    @Deprecated
-    public static final Item briquette_lignite = new ItemFuel("briquette_lignite", 1600).setCreativeTab(MainRegistry.partsTab);
     public static final Item coke = new ItemEnumMulti("coke", EnumCokeType.class, true, true).setCreativeTab(MainRegistry.partsTab);
     public static final Item lignite = new ItemFuel("lignite", 1200).setCreativeTab(MainRegistry.partsTab);
     //Circuit
