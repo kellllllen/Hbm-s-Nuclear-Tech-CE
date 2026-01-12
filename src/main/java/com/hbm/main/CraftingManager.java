@@ -586,12 +586,12 @@ public class CraftingManager {
         // These two solid pipes below are 1.12.2 exclusive. DO NOT REMOVE.
         addRecipeAuto(new ItemStack(ModBlocks.fluid_duct_solid, 8), "SAS", "ADA", "SAS", 'S', STEEL.ingot(), 'A', AL.plate(), 'D', ModItems.ducttape);
         addShapelessAuto(new ItemStack(ModBlocks.fluid_duct_solid_sealed, 1), ModBlocks.fluid_duct_solid, ModBlocks.brick_compound);
-        // TODO: fluid valve/switch
 		addRecipeAuto(new ItemStack(ModBlocks.fluid_duct_paintable, 8), "SAS", "A A", "SAS", 'S', STEEL.ingot(), 'A', AL.plate() );
 		addRecipeAuto(new ItemStack(ModBlocks.fluid_duct_paintable_block_exhaust, 8), "SAS", "A A", "SAS", 'S', IRON.ingot(), 'A', ModItems.plate_polymer);
 		addShapelessAuto(new ItemStack(ModBlocks.fluid_duct_gauge), ModBlocks.fluid_duct_paintable, STEEL.ingot(), DictFrame.fromOne(ModItems.circuit, EnumCircuitType.BASIC) );
-		/*addRecipeAuto(new ItemStack(ModBlocks.fluid_valve, 1), "S", "W", 'S', Blocks.LEVER, 'W', ModBlocks.fluid_duct_paintable );
-		addRecipeAuto(new ItemStack(ModBlocks.fluid_switch, 1), "S", "W", 'S', REDSTONE.dust(), 'W', ModBlocks.fluid_duct_paintable );*/
+		addRecipeAuto(new ItemStack(ModBlocks.fluid_valve, 1), "S", "W", 'S', Blocks.LEVER, 'W', ModBlocks.fluid_duct_paintable );
+		addRecipeAuto(new ItemStack(ModBlocks.fluid_switch, 1), "S", "W", 'S', REDSTONE.dust(), 'W', ModBlocks.fluid_duct_paintable );
+		addRecipeAuto(new ItemStack(ModBlocks.fluid_counter_valve, 1), "S", "W", 'S', DictFrame.fromOne(ModItems.circuit, EnumCircuitType.CHIP), 'W', ModBlocks.fluid_switch);
 		addRecipeAuto(new ItemStack(ModBlocks.fluid_pump, 1), " S ", "PGP", "IMI", 'S', STEEL.shell(), 'P', STEEL.pipe(), 'G', GRAPHITE.ingot(), 'I', STEEL.ingot(), 'M', ModItems.motor );
 		addRecipeAuto(new ItemStack(ModBlocks.pneumatic_tube, 8), "CRC", 'C', CU.plateCast(), 'R', ANY_RUBBER.ingot() );
 		addRecipeAuto(new ItemStack(ModBlocks.pneumatic_tube, 24), "CRC", 'C', CU.plateWelded(), 'R', ANY_RUBBER.ingot() );
