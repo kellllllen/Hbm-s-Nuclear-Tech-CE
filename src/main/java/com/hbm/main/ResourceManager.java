@@ -630,6 +630,7 @@ public class ResourceManager {
     public static final ResourceLocation hephaestus_tex = new ResourceLocation(Tags.MODID, "textures/models/machines/hephaestus.png");
     //FENSU
     public static final ResourceLocation battery_socket_tex = new ResourceLocation(Tags.MODID, "textures/models/machines/battery_socket.png");
+    public static final ResourceLocation battery_sc_tex = new ResourceLocation(Tags.MODID, "textures/models/machines/battery_sc.png");
     public static final ResourceLocation battery_redd_tex = new ResourceLocation(Tags.MODID, "textures/models/machines/fensu2.png");
     public static final ResourceLocation[] fensu_tex = new ResourceLocation[]{
             new ResourceLocation(Tags.MODID, "textures/models/machines/fensus/fensu_white.png"),

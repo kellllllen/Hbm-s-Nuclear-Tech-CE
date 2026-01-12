@@ -1,24 +1,32 @@
 package com.hbm.tileentity.machine.storage;
 
 import com.hbm.api.energymk2.*;
-import com.hbm.interfaces.AutoRegister;
+import com.hbm.handler.CompatHandler;
 import com.hbm.interfaces.IControlReceiver;
 import com.hbm.lib.DirPos;
 import com.hbm.tileentity.IGUIProvider;
 import com.hbm.tileentity.TileEntityMachineBase;
 import com.hbm.uninos.UniNodespace;
+import com.hbm.util.Compat;
 import com.hbm.util.EnumUtil;
 import io.netty.buffer.ByteBuf;
+import li.cil.oc.api.machine.Arguments;
+import li.cil.oc.api.machine.Callback;
+import li.cil.oc.api.machine.Context;
+import li.cil.oc.api.network.SimpleComponent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-public abstract class TileEntityBatteryBase extends TileEntityMachineBase implements ITickable, IEnergyConductorMK2, IEnergyProviderMK2, IEnergyReceiverMK2, IControlReceiver, IGUIProvider {
+@Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "opencomputers")})
+public abstract class TileEntityBatteryBase extends TileEntityMachineBase implements ITickable, IEnergyConductorMK2, IEnergyProviderMK2,
+        IEnergyReceiverMK2, IControlReceiver, IGUIProvider, SimpleComponent, CompatHandler.OCComponent {
 
     public byte lastRedstone = 0;
     public long prevPowerState = 0;
@@ -75,7 +83,13 @@ public abstract class TileEntityBatteryBase extends TileEntityMachineBase implem
             }
 
             byte comp = this.getComparatorPower();
-            if (comp != this.lastRedstone) this.markDirty();
+            if(comp != this.lastRedstone) {
+                System.out.println(comp);
+                for(BlockPos port : this.getPortPos()) {
+                    TileEntity tile = Compat.getTileStandard(world, port.getX(), port.getY(), port.getZ());
+                    if(tile != null) tile.markDirty();
+                }
+            }
             this.lastRedstone = comp;
 
             prevPowerState = this.getPower();
@@ -202,5 +216,63 @@ public abstract class TileEntityBatteryBase extends TileEntityMachineBase implem
     @SideOnly(Side.CLIENT)
     public double getMaxRenderDistanceSquared() {
         return 65536.0D;
+    }
+
+    // do some opencomputer stuff
+    @Override
+    @Optional.Method(modid = "opencomputers")
+    public String getComponentName() {
+        return "ntm_energy_storage";
+    }
+
+    @Callback(direct = true)
+    @Optional.Method(modid = "opencomputers")
+    public Object[] getEnergyInfo(Context context, Arguments args) {
+        return new Object[] {getPower(), getMaxPower()};
+    }
+
+    @Callback(direct = true)
+    @Optional.Method(modid = "opencomputers")
+    public Object[] getModeInfo(Context context, Arguments args) {
+        return new Object[] {redLow, redHigh, getPriority().ordinal()-1};
+    }
+    @Callback(direct = true)
+    @Optional.Method(modid = "opencomputers")
+    public Object[] setModeLow(Context context, Arguments args) {
+        short newMode = (short) args.checkInteger(0);
+        if (newMode >= mode_input && newMode <= mode_none) {
+            redLow = newMode;
+            return new Object[] {};
+        } else {
+            return new Object[] {"Invalid mode"};
+        }
+    }
+    @Callback(direct = true)
+    @Optional.Method(modid = "opencomputers")
+    public Object[] setModeHigh(Context context, Arguments args) {
+        short newMode = (short) args.checkInteger(0);
+        if (newMode >= mode_input && newMode <= mode_none) {
+            redHigh = newMode;
+            return new Object[] {};
+        } else {
+            return new Object[] {"Invalid mode"};
+        }
+    }
+    @Callback(direct = true)
+    @Optional.Method(modid = "opencomputers")
+    public Object[] setPriority(Context context, Arguments args) {
+        int newPriority = args.checkInteger(0);
+        if (newPriority >= 0 && newPriority <= 2) {
+            priority = EnumUtil.grabEnumSafely(ConnectionPriority.class, newPriority+1);
+            return new Object[] {};
+        } else {
+            return new Object[] {"Invalid mode"};
+        }
+    }
+
+    @Callback(direct = true)
+    @Optional.Method(modid = "opencomputers")
+    public Object[] getInfo(Context context, Arguments args) {
+        return new Object[] {getPower(), getMaxPower(), redLow, redHigh, getPriority().ordinal()-1};
     }
 }

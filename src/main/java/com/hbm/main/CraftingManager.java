@@ -299,6 +299,17 @@ public class CraftingManager {
 		addRecipeAuto(new ItemStack(ModItems.battery_pack, 1, ItemBatteryPack.EnumBatteryPack.BATTERY_REDSTONE.ordinal()), "IRI", "PRP", "IRI", 'I', IRON.plate(), 'R', REDSTONE.block(), 'P', ModItems.plate_polymer);
 		addRecipeAuto(new ItemStack(ModItems.battery_pack, 1, ItemBatteryPack.EnumBatteryPack.CAPACITOR_COPPER.ordinal()), "IRI", "PRP", "IRI", 'I', STEEL.plate(), 'R', CU.block(), 'P', ModItems.plate_polymer);
 
+		addRecipeAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.EMPTY.ordinal()), "PGP", "L L", "PGP", 'P', ANY_PLASTIC.ingot(), 'G', GOLD.wireFine(), 'L', PB.plate());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.WASTE.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), ModItems.billet_nuclear_waste, ModItems.billet_nuclear_waste);
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.RA226.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), RA226.billet(), RA226.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.TC99.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), TC99.billet(), TC99.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.CO60.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), CO60.billet(), CO60.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.PU238.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), PU238.billet(), PU238.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.PO210.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), PO210.billet(), PO210.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.AU198.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), AU198.billet(), AU198.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.PB209.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), PB209.billet(), PB209.billet());
+		addShapelessAuto(new ItemStack(ModItems.battery_sc, 1, ItemBatterySC.EnumBatterySC.AM241.ordinal()), DictFrame.fromOne(ModItems.battery_sc, ItemBatterySC.EnumBatterySC.EMPTY), AM241.billet(), AM241.billet());
+
 		// Note: doesn't preserve storage because a crate's contents are different items, but a mass storage's is just one
 		addRecipeAuto(new ItemStack(ModBlocks.mass_storage_iron), " L ", "ICI", " I ", 'I', TI.ingot(), 'C', ModBlocks.crate_steel, 'L', DictFrame.fromOne(ModItems.circuit, EnumCircuitType.VACUUM_TUBE) );
 		addRecipeAuto(new ItemStack(ModBlocks.mass_storage_wood), "PPP", "PIP", "PPP", 'P', KEY_PLANKS, 'I', IRON.plate() );
@@ -544,14 +555,6 @@ public class CraftingManager {
 		addShapelessAuto(ItemBattery.getFullBattery(ModItems.battery_potato), Items.POTATO, AL.wireFine(), CU.wireFine() );
 		addShapelessAuto(ItemBattery.getFullBattery(ModItems.battery_potatos), ItemBattery.getFullBattery(ModItems.battery_potato), ModItems.turret_chip, REDSTONE.dust() );
 
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_uranium), "NBN", "PCP", "NBN", 'N', GOLD.nugget(), 'B', U238.billet(), 'P', PB.plate(), 'C', ModItems.thermo_element );
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_technetium), "NBN", "PCP", "NBN", 'N', GOLD.nugget(), 'B', TC99.billet(), 'P', PB.plate(), 'C', ModItems.battery_sc_uranium );
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_plutonium), "NBN", "PCP", "NBN", 'N', TC99.nugget(), 'B', PU238.billet(), 'P', PB.plate(), 'C', ModItems.battery_sc_technetium );
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_polonium), "NBN", "PCP", "NBN", 'N', TC99.nugget(), 'B', PO210.billet(), 'P', ANY_PLASTIC.ingot(), 'C', ModItems.battery_sc_plutonium );
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_gold), "NBN", "PCP", "NBN", 'N', TA.nugget(), 'B', AU198.billet(), 'P', ANY_PLASTIC.ingot(), 'C', ModItems.battery_sc_polonium );
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_lead), "NBN", "PCP", "NBN", 'N', TA.nugget(), 'B', PB209.billet(), 'P', ANY_PLASTIC.ingot(), 'C', ModItems.battery_sc_gold );
-		addRecipeAuto(new ItemStack(ModItems.battery_sc_americium), "NBN", "PCP", "NBN", 'N', TA.nugget(), 'B', AM241.billet(), 'P', ANY_PLASTIC.ingot(), 'C', ModItems.battery_sc_lead );
-
 		addRecipeAuto(new ItemStack(ModItems.wiring_red_copper, 1), "PPP", "PIP", "PPP", 'P', STEEL.plate(), 'I', STEEL.ingot() );
 
 		addRecipeAuto(new ItemStack(ModItems.jetpack_tank, 1), " S ", "BKB", " S ", 'S', STEEL.plate(), 'B', STEEL.bolt(), 'K', Fluids.KEROSENE.getDict(1000) );
@@ -750,7 +753,7 @@ public class CraftingManager {
 		addShapelessAuto(new ItemStack(ModBlocks.barrel_iron, 1), ModBlocks.barrel_corroded, ANY_TAR.any() );
 		addRecipeAuto(new ItemStack(ModBlocks.barrel_steel, 1), "IPI", "ITI", "IPI", 'I', STEEL.plate(), 'P', STEEL.ingot(), 'T', ANY_TAR.any() );
 		addRecipeAuto(new ItemStack(ModBlocks.barrel_tcalloy, 1), "IPI", "I I", "IPI", 'I', "ingotTcAlloy", 'P', TI.plate() );
-		addRecipeAuto(new ItemStack(ModBlocks.barrel_antimatter, 1), "IPI", "IBI", "IPI", 'I', BIGMT.plate(), 'P', ModItems.coil_advanced_torus, 'B', ModItems.battery_sc_technetium );
+		addRecipeAuto(new ItemStack(ModBlocks.barrel_antimatter, 1), "IPI", "I I", "IPI", 'I', BIGMT.plate(), 'P', ModItems.coil_advanced_torus);
 		addRecipeAuto(new ItemStack(ModBlocks.tesla, 1), "CCC", "PIP", "WTW", 'C', ModItems.coil_copper, 'I', IRON.ingot(), 'P', ANY_PLASTIC.ingot(), 'T', ModBlocks.machine_transformer, 'W', KEY_PLANKS );
 		addRecipeAuto(new ItemStack(ModBlocks.struct_plasma_core, 1), "CBC", "BHB", "CBC", 'C', DictFrame.fromOne(ModItems.circuit, EnumCircuitType.ADVANCED), 'B', ModBlocks.machine_lithium_battery, 'H', ModBlocks.fusion_heater );
 		addRecipeAuto(new ItemStack(ModBlocks.struct_watz_core, 1), "CBC", "BHB", "CBC", 'C', DictFrame.fromOne(ModItems.circuit, EnumCircuitType.ADVANCED), 'B', ANY_RESISTANTALLOY.plateCast(), 'H', ModBlocks.watz_cooler );
