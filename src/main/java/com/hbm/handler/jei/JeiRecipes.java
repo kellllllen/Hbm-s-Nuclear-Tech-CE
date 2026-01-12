@@ -707,8 +707,8 @@ public class JeiRecipes {
 		batteries.add(new ItemStack(ModItems.battery_spark_cell_power));
 		batteries.add(new ItemStack(ModItems.fusion_core));
 		batteries.add(new ItemStack(ModItems.energy_core));
-		for(ItemBatteryPack.EnumBatteryPack num : ItemBatteryPack.EnumBatteryPack.values()) batteries.add(new ItemStack(ModItems.battery_pack, 1, num.ordinal()));
-		for(ItemBatterySC.EnumBatterySC num : ItemBatterySC.EnumBatterySC.values()) batteries.add(new ItemStack(ModItems.battery_sc, 1, num.ordinal()));
+		for(ItemBatteryPack.EnumBatteryPack num : ItemBatteryPack.EnumBatteryPack.VALUES) batteries.add(new ItemStack(ModItems.battery_pack, 1, num.ordinal()));
+		for(ItemBatterySC.EnumBatterySC num : ItemBatterySC.EnumBatterySC.VALUES) batteries.add(new ItemStack(ModItems.battery_sc, 1, num.ordinal()));
 		return batteries;
 	}
 	

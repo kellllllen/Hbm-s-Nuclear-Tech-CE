@@ -33,6 +33,8 @@ public class ItemBatterySC extends ItemEnumMulti implements IBatteryItem {
         PB209(	2_000),
         AM241(	2_500);
 
+        public static final EnumBatterySC[] VALUES = values();
+
         public final long power;
 
         EnumBatterySC(long power) {

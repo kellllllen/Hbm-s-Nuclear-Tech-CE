@@ -69,6 +69,14 @@ public class MachineBatteryREDD extends BlockDummyable implements IPersistentInf
         this.makeExtra(world, x - rot.offsetX * 4, y, z - rot.offsetZ * 4);
     }
 
+    // IPersistentNBT
+
+    @Override
+    public void breakBlock(World world, BlockPos pos, IBlockState state) {
+        IPersistentNBT.breakBlock(world, pos, state);
+        super.breakBlock(world, pos, state);
+    }
+
     @Override
     public void dropBlockAsItemWithChance(World worldIn, BlockPos pos, IBlockState state, float chance, int fortune) {
     }
