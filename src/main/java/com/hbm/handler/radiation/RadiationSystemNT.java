@@ -644,6 +644,7 @@ public final class RadiationSystemNT {
         double lastMs = Math.rint(ms * 1000.0) / 1000.0;
         int dimId = data.world.provider.getDimension();
         String dimType = data.world.provider.getDimensionType().getName();
+        //noinspection AutoBoxing
         MainRegistry.logger.info("[RadiationSystemNT] dim {} ({}) avg {} ms/step over last {} steps (total {} ms, last {} ms)", dimId, dimType, avgMs,
                 PROFILE_WINDOW, (int) Math.rint(totalMs), lastMs);
         data.executionTimeAccumulator = 0.0D;
@@ -656,8 +657,9 @@ public final class RadiationSystemNT {
         samples.add(ms);
     }
 
-    private static void logLifetimeProfiling(WorldRadiationData data) {
-        if (!GeneralConfig.enableDebugMode) return;
+    @SuppressWarnings("AutoBoxing")
+    private static void logLifetimeProfiling(@Nullable WorldRadiationData data) {
+        if (!GeneralConfig.enableDebugMode || data == null) return;
         long steps = data.profSteps;
         if (steps <= 0) return;
         int dimId = data.world.provider.getDimension();
@@ -839,7 +841,7 @@ public final class RadiationSystemNT {
         wakeBag.tryAdd(pocketKey(sectionKey, 0));
     }
 
-    private static void finalizeRange(WorldRadiationData data, long[] keys, @Nullable SectionRef @Nullable [] refs,
+    private static void finalizeRange(WorldRadiationData data, long[] keys, SectionRef @Nullable [] refs,
                                       @Nullable ChunkRef @Nullable [] chunkRefs, int start, int end) {
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
@@ -1073,7 +1075,7 @@ public final class RadiationSystemNT {
         return raw;
     }
 
-    private static @Nullable byte[] tryEncodePayload(WorldRadiationData data, int cx, int cz) {
+    private static byte @Nullable [] tryEncodePayload(WorldRadiationData data, int cx, int cz) {
         ByteBuffer buf = BUF;
         buf.clear();
         buf = ensureCapacity(buf, 2);
@@ -1620,7 +1622,7 @@ public final class RadiationSystemNT {
     private static abstract class ChunkRefHeader {
         final long ck;
         // non-null if KIND is not NONE/UNI. If not, invariant breach should throw NPE
-        final @Nullable SectionRef @NotNull [] sec = new SectionRef[16];
+        final SectionRef[] sec = new SectionRef[16];
         final double[] uniformRads = new double[16];
         final int[] uniformEpochs = new int[16];
         Chunk mcChunk; // non-null for async compute, nullable for server thread ops

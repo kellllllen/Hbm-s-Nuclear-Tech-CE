@@ -1,6 +1,7 @@
 package com.hbm.entity.missile;
 
 import com.hbm.api.entity.IRadarDetectable;
+import com.hbm.api.entity.IThrowable;
 import com.hbm.config.WeaponConfig;
 import com.hbm.entity.logic.IChunkLoader;
 import com.hbm.explosion.ExplosionLarge;
@@ -11,6 +12,7 @@ import com.hbm.packet.PacketDispatcher;
 import com.hbm.render.amlfrom1710.Vec3;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -34,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public abstract class EntityMissileBaseAdvanced extends Entity implements IChunkLoader, IConstantRenderer, IRadarDetectable {
+public abstract class EntityMissileBaseAdvanced extends Entity implements IChunkLoader, IConstantRenderer, IRadarDetectable, IThrowable {
 
 	public static final DataParameter<Integer> HEALTH = EntityDataManager.createKey(EntityMissileBaseAdvanced.class, DataSerializers.VARINT);
 	public static final double particleSpeed = 1.75D;
@@ -306,7 +308,8 @@ public abstract class EntityMissileBaseAdvanced extends Entity implements IChunk
 		}
 	}
 
-	public void setThrower(Entity entity) {
+	@Override
+	public void setThrower(EntityLivingBase entity) {
 		if (entity instanceof EntityPlayerMP playerMP)
 			this.thrower = playerMP.getUniqueID();
 	}
