@@ -5,15 +5,18 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.*;
 
 import java.nio.FloatBuffer;
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 
-public class WaveFrontObjectVAO implements IModelCustom {
+public class WaveFrontObjectVAO implements IModelCustomNamed {
 
-    public static ArrayList<WaveFrontObjectVAO> allVBOs = new ArrayList<>();
+    public static final List<WaveFrontObjectVAO> allVBOs = new CopyOnWriteArrayList<>();
     public static final boolean GL30Support = GLContext.getCapabilities().OpenGL30;
     public static final boolean AppleVAOSupport = GLContext.getCapabilities().GL_APPLE_vertex_array_object;
 
@@ -92,6 +95,7 @@ public class WaveFrontObjectVAO implements IModelCustom {
 
     public void generate_vaos(){
         for (VBOBufferData data : groups) {
+            if(data.vaoHandle != -1 || data.vboHandle != -1 )continue;
 
             if(arbOr30() == 1) {
                 data.vaoHandle = GL30.glGenVertexArrays();
@@ -187,13 +191,38 @@ public class WaveFrontObjectVAO implements IModelCustom {
         }
     }
 
+    public void delete() {
+        var vaoIDBuffer = BufferUtils.createIntBuffer(groups.size());
+        var vboIDBuffer = BufferUtils.createIntBuffer(groups.size());
+        for (VBOBufferData data : groups) {
+            vaoIDBuffer.put(data.vaoHandle);
+            vboIDBuffer.put(data.vboHandle);
+        }
+        vaoIDBuffer.flip();
+        vboIDBuffer.flip();
+
+        if(arbOr30() == 1)
+            GL30.glDeleteVertexArrays(0);
+        else  APPLEVertexArrayObject.glDeleteVertexArraysAPPLE(0);
+        GL15.glDeleteBuffers(vboIDBuffer);
+    }
 
 
     class VBOBufferData {
         String name;
         int vertices = 0;
-        int vboHandle;
-        int vaoHandle;
+        int vboHandle = -1;
+        int vaoHandle = -1;
     }
+
+    @Override
+    public List<String> getPartNames() {
+        List<String> names = new ArrayList<String>();
+        for(VBOBufferData data : groups) {
+            names.add(data.name);
+        }
+        return names;
+    }
+
 
 }

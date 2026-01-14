@@ -12,6 +12,7 @@ import com.hbm.interfaces.IDoor;
 import com.hbm.main.ResourceManager;
 import com.hbm.render.WavefrontObjDisplayList;
 import com.hbm.render.item.ItemRenderBase;
+import com.hbm.render.loader.IModelCustomNamed;
 import com.hbm.tileentity.DoorDecl;
 import com.hbm.tileentity.TileEntityDoorGeneric;
 import net.minecraft.client.renderer.GLAllocation;
@@ -52,7 +53,7 @@ public class RenderDoorGeneric extends TileEntitySpecialRenderer<TileEntityDoorG
     if (buf == null) {
       buf = GLAllocation.createDirectByteBuffer(8 * 4).asDoubleBuffer();
     }
-    DoorDecl door = te.doorType;
+    DoorDecl door = te.getDoorType();
 
     GlStateManager.pushMatrix();
     GlStateManager.translate(x + 0.5, y, z + 0.5);
@@ -98,7 +99,7 @@ public class RenderDoorGeneric extends TileEntitySpecialRenderer<TileEntityDoorG
       animModel.controller.setAnim(w);
       animModel.renderAnimated(System.currentTimeMillis());
     } else {
-      WavefrontObjDisplayList model = door.getModel();
+      IModelCustomNamed model = door.getModel();
 
       long ms = System.currentTimeMillis() - te.animStartTime;
       float openTicks =
@@ -109,22 +110,32 @@ public class RenderDoorGeneric extends TileEntitySpecialRenderer<TileEntityDoorG
                   0,
                   door.timeToOpen() * 50)
               * 0.02F;
-      for (Pair<String, Integer> p : model.nameToCallList) {
-        if (!door.doesRender(p.getLeft(), false)) continue;
-        GlStateManager.pushMatrix();
-        bindTexture(door.getTextureForPart(p.getLeft()));
-        doPartTransform(door, p.getLeft(), openTicks, false);
-        GL11.glCallList(p.getRight());
-        for (String name : door.getChildren(p.getLeft())) {
-          if (!door.doesRender(name, true)) continue;
-          GlStateManager.pushMatrix();
-          bindTexture(door.getTextureForPart(name));
-          doPartTransform(door, name, openTicks, true);
-          model.renderPart(name);
-          GlStateManager.popMatrix();
+        for(String partName : model.getPartNames()) {
+            if(!door.doesRender(partName, false))
+                continue;
+
+            GlStateManager.pushMatrix();
+            {
+                bindTexture(door.getTextureForPart(/*te.getSkinIndex(),*/ partName));
+                doPartTransform(door, partName, openTicks, false);
+                model.renderPart(partName);
+
+                for(String innerPartName : door.getChildren(partName)) {
+                    if(!door.doesRender(innerPartName, true))
+                        continue;
+
+                    GlStateManager.pushMatrix();
+                    {
+                        bindTexture(door.getTextureForPart(/*te.getSkinIndex(),*/innerPartName));
+                        doPartTransform(door, innerPartName, openTicks, true);
+                        model.renderPart(innerPartName);
+                    }
+                    GlStateManager.popMatrix();
+                }
+            }
+            GlStateManager.popMatrix();
         }
-        GlStateManager.popMatrix();
-      }
+
     }
 
     for (int i = 0; i < clip.length; i++) {
@@ -165,6 +176,8 @@ public class RenderDoorGeneric extends TileEntitySpecialRenderer<TileEntityDoorG
       Item.getItemFromBlock(ModBlocks.secure_access_door),
       Item.getItemFromBlock(ModBlocks.sliding_seal_door),
       Item.getItemFromBlock(ModBlocks.sliding_gate_door),
+      Item.getItemFromBlock(ModBlocks.silo_hatch),
+      Item.getItemFromBlock(ModBlocks.silo_hatch_large),
     };
   }
 
@@ -315,6 +328,62 @@ public class RenderDoorGeneric extends TileEntitySpecialRenderer<TileEntityDoorG
         }
       };
     }
+    else if (item == Item.getItemFromBlock(ModBlocks.silo_hatch)) {
+        return new ItemRenderBase() {
+            @Override
+            public void renderInventory() {
+                GlStateManager.translate(0, -2, 0);
+                GlStateManager.scale(2, 2, 2);
+            }
+
+            @Override
+            public void renderCommon() {
+                bindTexture(ResourceManager.silo_hatch_tex);
+                GlStateManager.shadeModel(GL11.GL_SMOOTH);
+                GlStateManager.rotate(90, 0, 1, 0);
+                ResourceManager.silo_hatch.renderPart("Frame");
+
+                GlStateManager.translate(0, 0.875, -1.875);
+                GlStateManager.rotate(-120, 1, 0, 0);
+                GlStateManager.translate(0, -0.875, 1.875);
+
+                GlStateManager.translate(0, 0.25, 0);
+                ResourceManager.silo_hatch.renderPart("Hatch");
+
+                GlStateManager.shadeModel(GL11.GL_FLAT);
+            }
+        };
+    } else if (item == Item.getItemFromBlock(ModBlocks.silo_hatch_large)) {
+        return new ItemRenderBase() {
+            @Override
+            public void renderInventory() {
+                GlStateManager.translate(0, -2, 0);
+                GlStateManager.scale(1.5, 1.5, 1.5);
+            }
+
+            @Override
+            public void renderCommon() {
+                bindTexture(ResourceManager.silo_hatch_large_tex);
+                GlStateManager.shadeModel(GL11.GL_SMOOTH);
+
+                GlStateManager.translate(1, 0, 0);
+                GlStateManager.rotate(90, 0, 1, 0);
+                ResourceManager.silo_hatch_large.renderPart("Frame");
+
+                GlStateManager.translate(0, 0.875, -2.875);
+                GlStateManager.rotate(-120, 1, 0, 0);
+                GlStateManager.translate(0, -0.875, 2.875);
+
+                GlStateManager.translate(0, 0.25, 0);
+                ResourceManager.silo_hatch_large.renderPart("Hatch");
+
+                GlStateManager.shadeModel(GL11.GL_FLAT);
+            }
+        };
+    }
+
+
+
 
     return new ItemRenderBase() {
       public void renderInventory() {

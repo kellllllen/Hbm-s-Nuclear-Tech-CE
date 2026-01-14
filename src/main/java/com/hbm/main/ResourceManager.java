@@ -15,12 +15,16 @@ import com.hbm.render.anim.sedna.AnimationLoader;
 import com.hbm.render.anim.sedna.BusAnimationSedna;
 import com.hbm.render.loader.HFRWavefrontObject;
 import com.hbm.render.loader.IModelCustom;
+import com.hbm.render.loader.IModelCustomNamed;
 import com.hbm.render.loader.WaveFrontObjectVAO;
 import com.hbm.render.misc.LensVisibilityHandler;
 import com.hbm.util.Compat;
 import com.hbm.util.KeypadClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.IReloadableResourceManager;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.SplashProgress;
@@ -1647,16 +1651,20 @@ public class ResourceManager {
     //Doors
     public static AnimatedModel transition_seal;
     public static Animation transition_seal_anim;
-    public static WavefrontObjDisplayList water_door;
-    public static WavefrontObjDisplayList large_vehicle_door;
-    public static WavefrontObjDisplayList qe_containment_door;
-    public static WavefrontObjDisplayList qe_sliding_door;
-    public static WavefrontObjDisplayList fire_door;
-    public static WavefrontObjDisplayList small_hatch;
-    public static WavefrontObjDisplayList round_airlock_door;
-    public static WavefrontObjDisplayList secure_access_door;
-    public static WavefrontObjDisplayList sliding_seal_door;
-    public static IModelCustom spinny_light = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/spinny_light.obj")).asVBO();
+    public static final IModelCustomNamed water_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/water_door.obj")).asVBO();
+    public static final IModelCustomNamed large_vehicle_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/large_vehicle_door.obj")).asVBO();
+    public static final IModelCustomNamed qe_containment_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/qe_containment.obj")).asVBO();
+    public static final IModelCustomNamed qe_sliding_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/qe_sliding_door.obj")).asVBO();
+    public static final IModelCustomNamed fire_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/fire_door.obj")).asVBO();
+    public static final IModelCustomNamed small_hatch = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/hatch.obj")).asVBO();
+    public static final IModelCustomNamed round_airlock_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/round_airlock_door.obj")).asVBO();
+    public static final IModelCustomNamed secure_access_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/secure_access_door.obj")).asVBO();
+    public static final IModelCustomNamed sliding_seal_door = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/sliding_seal_door.obj")).asVBO();
+    public static final IModelCustom spinny_light = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/spinny_light.obj")).asVBO();
+    public static final ResourceLocation silo_hatch_tex = new ResourceLocation(Tags.MODID, "textures/models/doors/silo_hatch.png");
+    public static final IModelCustomNamed silo_hatch = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/silo_hatch.obj")).asVBO();
+    public static final ResourceLocation silo_hatch_large_tex = new ResourceLocation(Tags.MODID, "textures/models/doors/silo_hatch_large.png");
+    public static final IModelCustomNamed silo_hatch_large = new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/silo_hatch_large.obj")).asVBO();
     //Gluon gun and tau cannon
     public static ResourceLocation flare = new ResourceLocation(Tags.MODID, "textures/misc/flare.png");
     public static ResourceLocation flare2 = new ResourceLocation(Tags.MODID, "textures/misc/flare2.png");
@@ -1688,7 +1696,7 @@ public class ResourceManager {
     public static AnimatedModel door0_1;
     public static Animation door0_open;
 
-    public static AnimatedModel silo_hatch;
+    public static AnimatedModel silo_hatch_drillgon;
     public static Animation silo_hatch_open;
 
     public static AnimatedModel jetpack;
@@ -1880,7 +1888,7 @@ public class ResourceManager {
         door0_1 = ColladaLoader.load(new ResourceLocation(Tags.MODID, "models/anim/door0_1.dae"));
         door0_open = ColladaLoader.loadAnim(1200, new ResourceLocation(Tags.MODID, "models/anim/door0.dae"));
 
-        silo_hatch = ColladaLoader.load(new ResourceLocation(Tags.MODID, "models/anim/hatch.dae"));
+        silo_hatch_drillgon = ColladaLoader.load(new ResourceLocation(Tags.MODID, "models/anim/hatch.dae"));
         silo_hatch_open = ColladaLoader.loadAnim(5000, new ResourceLocation(Tags.MODID, "models/anim/hatch.dae"));
 
         jetpack = ColladaLoader.load(new ResourceLocation(Tags.MODID, "models/anim/jetpack.dae"));
@@ -1907,29 +1915,13 @@ public class ResourceManager {
     }
 
     public static void init() {
-        if (GeneralConfig.callListModels && soyuz instanceof HFRWavefrontObject) {
-            soyuz = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz);
-            soyuz_launcher_legs = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz_launcher_legs);
-            soyuz_launcher_table = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz_launcher_table);
-            soyuz_launcher_tower_base = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz_launcher_tower_base);
-            soyuz_launcher_tower = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz_launcher_tower);
-            soyuz_launcher_support_base = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz_launcher_support_base);
-            soyuz_launcher_support = new WavefrontObjDisplayList((HFRWavefrontObject) soyuz_launcher_support);
-            sphere_hq = new WavefrontObjDisplayList((HFRWavefrontObject) sphere_hq);
-            egon_hose = new WavefrontObjDisplayList((HFRWavefrontObject) egon_hose);
-            egon_backpack = new WavefrontObjDisplayList((HFRWavefrontObject) egon_backpack);
-            spinny_light = new WavefrontObjDisplayList((HFRWavefrontObject) spinny_light);
-            sphere_uv = new WavefrontObjDisplayList((HFRWavefrontObject) sphere_uv);
+
+        //Drillgon discovered that it messes with GL context
+        pauseSplash();
+        for (WaveFrontObjectVAO obj : WaveFrontObjectVAO.allVBOs) {
+            obj.generate_vaos();
         }
-        water_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/water_door.obj")));
-        large_vehicle_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/large_vehicle_door.obj")));
-        qe_containment_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/qe_containment.obj")));
-        qe_sliding_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/qe_sliding_door.obj")));
-        fire_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/fire_door.obj")));
-        small_hatch = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/hatch.obj")));
-        round_airlock_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/round_airlock_door.obj")));
-        secure_access_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/secure_access_door.obj")));
-        sliding_seal_door = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/doors/sliding_seal_door.obj")));
+        resumeSplash();
         KeypadClient.load();
 
         LensVisibilityHandler.checkSphere = new WavefrontObjDisplayList(new HFRWavefrontObject(new ResourceLocation(Tags.MODID, "models/diffractionspikechecker.obj"))).getListForName("sphere");
@@ -1940,12 +1932,8 @@ public class ResourceManager {
         Minecraft.getMinecraft().getTextureManager().bindTexture(noise_2);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 
-        //Drillgon discovered that it messes with GL context
-        pauseSplash();
-        for (WaveFrontObjectVAO obj : WaveFrontObjectVAO.allVBOs) {
-            obj.generate_vaos();
-        }
-        resumeSplash();
+
+
     }
 
     private static final MethodHandle splashThreadGetter;
@@ -2011,4 +1999,6 @@ public class ResourceManager {
         // this line is expected throw NullPointerException
         return splashThread.getState() != Thread.State.TERMINATED;
     }
+
+
 }
