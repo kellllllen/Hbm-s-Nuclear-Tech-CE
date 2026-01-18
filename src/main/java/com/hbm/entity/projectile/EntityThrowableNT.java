@@ -2,72 +2,77 @@ package com.hbm.entity.projectile;
 
 import com.hbm.api.entity.IThrowable;
 import com.hbm.lib.Library;
-import com.hbm.lib.internal.MethodHandleHelper;
 import com.hbm.util.TrackerUtil;
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.projectile.EntityThrowable;
+import net.minecraft.entity.IProjectile;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodType;
 import java.util.List;
+import java.util.function.Predicate;
+
 
 /**
  * Near-identical copy of EntityThrowable but deobfuscated & untangled
  *
  * @author hbm
  */
-public abstract class EntityThrowableNT extends EntityThrowable implements IThrowable {
+//mlbv: this class is cursed, do not attempt to make it override EntityThrowable, better leave it as is
+public abstract class EntityThrowableNT extends Entity implements IProjectile, IThrowable {
     private static final DataParameter<Byte> STUCK_IN = EntityDataManager.createKey(EntityThrowableNT.class, DataSerializers.BYTE);
-    private static final MethodHandle ENTITY_ON_UPDATE = MethodHandleHelper.findSpecial(Entity.class, EntityThrowableNT.class, "onUpdate", "func_70071_h_", MethodType.methodType(void.class));
+    public int throwableShake;
+    protected boolean inGround;
+    protected EntityLivingBase thrower;
+    private int stuckBlockX = -1;
+    private int stuckBlockY = -1;
+    private int stuckBlockZ = -1;
+    private Block stuckBlock;
+    private String throwerName;
+    private int ticksInGround;
+    private int ticksInAir;
 
     public EntityThrowableNT(World worldIn) {
         super(worldIn);
+        setSize(0.25F, 0.25F);
     }
 
     public EntityThrowableNT(World worldIn, double x, double y, double z) {
-        super(worldIn, x, y, z);
+        this(worldIn);
+        ticksInGround = 0;
+        setSize(0.25F, 0.25F);
+        setPosition(x, y, z);
     }
 
-    public EntityThrowableNT(World worldIn, EntityLivingBase throwerIn) {
-        super(worldIn);
-        thrower = throwerIn;
-
-        setLocationAndAngles(throwerIn.posX, throwerIn.posY + (double) throwerIn.getEyeHeight(), throwerIn.posZ, throwerIn.rotationYaw, throwerIn.rotationPitch);
-
-        double yawRad = (double) rotationYaw * Library.DEG_TO_RAD;
-        double pitchRad = (double) rotationPitch * Library.DEG_TO_RAD;
-        posX -= Math.cos(yawRad) * 0.16D;
+    public EntityThrowableNT(World world, EntityLivingBase thrower) {
+        super(world);
+        this.thrower = thrower;
+        setSize(0.25F, 0.25F);
+        setLocationAndAngles(thrower.posX, thrower.posY + (double) thrower.getEyeHeight(), thrower.posZ, thrower.rotationYaw, thrower.rotationPitch);
+        posX -= (double) (MathHelper.cos(rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         posY -= 0.1D;
-        posZ -= Math.sin(yawRad) * 0.16D;
+        posZ -= (double) (MathHelper.sin(rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         setPosition(posX, posY, posZ);
-
-        double dir = 0.4D;
-
-        motionX = -Math.sin(yawRad) * Math.cos(pitchRad) * dir;
-        motionZ = Math.cos(yawRad) * Math.cos(pitchRad) * dir;
-
-        double pitchWithThrow = (rotationPitch + throwAngle()) * Library.DEG_TO_RAD;
-        motionY = -Math.sin(pitchWithThrow) * dir;
-
+        float velocity = 0.4F;
+        motionX = (double) (-MathHelper.sin(rotationYaw / 180.0F * (float) Math.PI) * MathHelper.cos(rotationPitch / 180.0F * (float) Math.PI) * velocity);
+        motionZ = (double) (MathHelper.cos(rotationYaw / 180.0F * (float) Math.PI) * MathHelper.cos(rotationPitch / 180.0F * (float) Math.PI) * velocity);
+        motionY = (double) (-MathHelper.sin((rotationPitch + throwAngle()) / 180.0F * (float) Math.PI) * velocity);
         shoot(motionX, motionY, motionZ, throwForce(), 1.0F);
     }
 
     @Override
     protected void entityInit() {
-        super.entityInit();
         dataManager.register(STUCK_IN, (byte) 0);
     }
 
@@ -95,6 +100,181 @@ public abstract class EntityThrowableNT extends EntityThrowable implements IThro
         return 1.0D;
     }
 
+    @SideOnly(Side.CLIENT)
+    @Override
+    public boolean isInRangeToRenderDist(double distance) {
+        double d0 = getEntityBoundingBox().getAverageEdgeLength() * 4.0D;
+        if (Double.isNaN(d0)) {
+            d0 = 4.0D;
+        }
+        d0 = d0 * 64.0D;
+        return distance < d0 * d0;
+    }
+
+    @Override
+    public void shoot(double motionX, double motionY, double motionZ, float velocity, float inaccuracy) {
+        float throwLen = MathHelper.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        //Euclidean Distance ^^
+
+        motionX /= (double) throwLen;
+        motionY /= (double) throwLen;
+        motionZ /= (double) throwLen;
+
+        motionX += rand.nextGaussian() * headingForceMult() * (double) inaccuracy;
+        motionY += rand.nextGaussian() * headingForceMult() * (double) inaccuracy;
+        motionZ += rand.nextGaussian() * headingForceMult() * (double) inaccuracy;
+
+        motionX *= (double) velocity;
+        motionY *= (double) velocity;
+        motionZ *= (double) velocity;
+
+        //Motion should be fine as a double
+
+        this.motionX = motionX;
+        this.motionY = motionY;
+        this.motionZ = motionZ;
+        float hyp = MathHelper.sqrt(motionX * motionX + motionZ * motionZ);
+        prevRotationYaw = rotationYaw = (float) (Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
+        prevRotationPitch = rotationPitch = (float) (Math.atan2(motionY, (double) hyp) * 180.0D / Math.PI);
+        ticksInGround = 0;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void setVelocity(double x, double y, double z) {
+        motionX = x;
+        motionY = y;
+        motionZ = z;
+
+        if (prevRotationPitch == 0.0F && prevRotationYaw == 0.0F) {
+            float hyp = MathHelper.sqrt(x * x + z * z);
+            prevRotationYaw = rotationYaw = (float) (Math.atan2(x, z) * 180.0D / Math.PI);
+            prevRotationPitch = rotationPitch = (float) (Math.atan2(y, (double) hyp) * 180.0D / Math.PI);
+        }
+    }
+
+    @Override
+    public void onUpdate() { //FIXME: This wont work for 1.12 due to 1.9 physics changes
+        super.onUpdate();
+
+        if (throwableShake > 0) {
+            --throwableShake;
+        }
+
+        if (inGround) {
+            if (world.getBlockState(new BlockPos(stuckBlockX, stuckBlockY, stuckBlockZ)).getBlock() == stuckBlock) {
+                ++ticksInGround;
+
+                if (groundDespawn() > 0 && ticksInGround == groundDespawn()) {
+                    setDead();
+                }
+
+                return;
+            }
+
+            inGround = false;
+//                this.motionX *= (double) (this.rand.nextFloat() * 0.2F);
+//                this.motionY *= (double) (this.rand.nextFloat() * 0.2F);
+//                this.motionZ *= (double) (this.rand.nextFloat() * 0.2F);
+            //Randomizing motion why?? Im assuming for unpredicadbility but no
+
+            ticksInGround = 0;
+            ticksInAir = 0;
+        }
+
+        ++ticksInAir;
+        double mm = motionMult();
+        Vec3d pos = new Vec3d(posX, posY, posZ);
+        Vec3d nextPos = new Vec3d(posX + motionX * mm, posY + motionY * mm, posZ + motionZ * mm);
+
+        RayTraceResult mop = null;
+        if (!isSpectral()) {
+            mop = Library.rayTraceBlocks(world, pos, nextPos, false, true, false);
+        }
+        //Looks fine too theres no Float divs,
+
+        if (mop != null) {
+            nextPos = new Vec3d(mop.hitVec.x, mop.hitVec.y, mop.hitVec.z);
+        }
+
+        if (!world.isRemote && doesImpactEntities()) {
+            EntityLivingBase shooter = getThrower();
+
+            Predicate<? super Entity> filter = null;
+            if (shooter != null && ticksInAir < selfDamageDelay()) {
+                filter = e -> e != shooter;
+            }
+
+            if (!doesPenetrate()) {
+                RayTraceResult entHit = Library.rayTraceEntities(world, this, pos, nextPos, 0.3D, filter);
+                if (entHit != null) {
+                    mop = entHit;
+                }
+            } else {
+                AxisAlignedBB swept = getEntityBoundingBox().expand(motionX * mm, motionY * mm, motionZ * mm).grow(1.0D);
+                List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(this, swept);
+                for (Entity entity : list) {
+                    if (!entity.canBeCollidedWith()) continue;
+                    if (filter != null && !filter.test(entity)) continue;
+                    double hitbox = 0.3D;
+                    AxisAlignedBB aabb = entity.getEntityBoundingBox().expand(hitbox, hitbox, hitbox);
+                    RayTraceResult hitMop = aabb.calculateIntercept(pos, nextPos);
+                    if (hitMop != null) {
+                        onImpact(new RayTraceResult(entity, hitMop.hitVec));
+                    }
+                }
+            }
+        }
+
+        if (mop != null) {
+            if (mop.typeOfHit == RayTraceResult.Type.BLOCK && world.getBlockState(mop.getBlockPos()).getBlock() == Blocks.PORTAL) {
+                setPortal(mop.getBlockPos());
+            } else if (!ForgeEventFactory.onProjectileImpact(this, mop)) {
+                onImpact(mop);
+            }
+        }
+
+        // Code for motion and rotation during flight
+        if (!onGround) {
+            float hyp = MathHelper.sqrt(motionX * motionX + motionZ * motionZ);
+            rotationYaw = (float) (Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
+
+            rotationPitch = (float) (Math.atan2(motionY, (double) hyp) * 180.0D / Math.PI);
+            while (rotationPitch - prevRotationPitch < -180.0F) prevRotationPitch -= 360.0F;
+            while (rotationPitch - prevRotationPitch >= 180.0F) prevRotationPitch += 360.0F;
+            while (rotationYaw - prevRotationYaw < -180.0F) prevRotationYaw -= 360.0F;
+            while (rotationYaw - prevRotationYaw >= 180.0F) prevRotationYaw += 360.0F;
+
+            rotationPitch = prevRotationPitch + (rotationPitch - prevRotationPitch) * 0.2F;
+            rotationYaw = prevRotationYaw + (rotationYaw - prevRotationYaw) * 0.2F;
+        }
+
+        float drag = getAirDrag();
+        float gravity = getGravityVelocity();
+        //Why are we fetching a const on every frame update??
+        //Is gravity expected to change ?
+
+        posX += motionX * mm;
+        posY += motionY * mm;
+        posZ += motionZ * mm;
+
+        if (isInWater()) {
+            for (int i = 0; i < 4; ++i) {
+                float f = 0.25F;
+                world.spawnParticle(EnumParticleTypes.WATER_BUBBLE, posX - motionX * (double) f, posY - motionY * (double) f, posZ - motionZ * (double) f, motionX, motionY, motionZ);
+            }
+
+            drag = getWaterDrag();
+        }
+
+        motionX *= (double) drag;
+        motionY *= (double) drag;
+        motionZ *= (double) drag;
+        motionY -= gravity;
+
+        setPosition(posX, posY, posZ);
+    }
+
     public boolean doesImpactEntities() {
         return true;
     }
@@ -111,183 +291,61 @@ public abstract class EntityThrowableNT extends EntityThrowable implements IThro
         return 5;
     }
 
-    @Override
-    public void shoot(double x, double y, double z, float velocity, float inaccuracy) {
-        double lenSq = x * x + y * y + z * z;
-        if (lenSq < 1.0e-24D) return;
-
-        double invLen = 1.0D / Math.sqrt(lenSq);
-        x *= invLen;
-        y *= invLen;
-        z *= invLen;
-
-        double hf = headingForceMult() * (double) inaccuracy;
-        x += rand.nextGaussian() * hf;
-        y += rand.nextGaussian() * hf;
-        z += rand.nextGaussian() * hf;
-
-        x *= (double) velocity;
-        y *= (double) velocity;
-        z *= (double) velocity;
-
-        motionX = x;
-        motionY = y;
-        motionZ = z;
-
-        double hyp = Math.sqrt(x * x + z * z);
-        rotationYaw = (float) (Math.atan2(x, z) * 180.0D / Math.PI);
-        rotationPitch = (float) (Math.atan2(y, hyp) * 180.0D / Math.PI);
-
-        prevRotationYaw = rotationYaw;
-        prevRotationPitch = rotationPitch;
-
-        ticksInGround = 0;
-    }
-
-    @Override
-    public void onUpdate() {
-        lastTickPosX = posX;
-        lastTickPosY = posY;
-        lastTickPosZ = posZ;
-
-        try {
-            ENTITY_ON_UPDATE.invokeExact(this);
-        } catch (Throwable t) {
-            throw new RuntimeException("Failed to invoke Entity#onUpdate via MethodHandle", t);
-        }
-
-        if (throwableShake > 0) {
-            --throwableShake;
-        }
-
-        if (inGround) {
-            Block current = world.getBlockState(new BlockPos(xTile, yTile, zTile)).getBlock();
-
-            if (current == inTile) {
-                ++ticksInGround;
-
-                int despawn = groundDespawn();
-                if (despawn > 0 && ticksInGround == despawn) {
-                    setDead();
-                }
-                return;
-            }
-
-            inGround = false;
-            motionX *= rand.nextFloat() * 0.2F;
-            motionY *= rand.nextFloat() * 0.2F;
-            motionZ *= rand.nextFloat() * 0.2F;
-            ticksInGround = 0;
-            ticksInAir = 0;
-            setStuckIn(0);
-        } else {
-            ++ticksInAir;
-        }
-
-        double mm = motionMult();
-        double mx = motionX * mm;
-        double my = motionY * mm;
-        double mz = motionZ * mm;
-
-        Vec3d start = new Vec3d(posX, posY, posZ);
-        Vec3d end = new Vec3d(posX + mx, posY + my, posZ + mz);
-
-        RayTraceResult hit = null;
-
-        if (!isSpectral()) {
-            hit = Library.rayTraceBlocks(world, start, end, false, true, false);
-        }
-
-        Vec3d entityEnd = (hit != null) ? hit.hitVec : end;
-
-        if (doesImpactEntities()) {
-            EntityLivingBase thrower = getThrower();
-            int selfDelay = selfDamageDelay();
-
-            if (doesPenetrate()) {
-                AxisAlignedBB query = getEntityBoundingBox().expand(mx, my, mz).grow(1.0D);
-                List<Entity> list = world.getEntitiesWithinAABBExcludingEntity(this, query);
-
-                for (int i = 0, n = list.size(); i < n; i++) {
-                    Entity e = list.get(i);
-                    if (!e.canBeCollidedWith() || !e.isEntityAlive()) continue;
-                    if (e == thrower && ticksInAir < selfDelay) continue;
-
-                    AxisAlignedBB aabb = e.getEntityBoundingBox().grow(0.3D);
-                    RayTraceResult r = aabb.calculateIntercept(start, entityEnd);
-                    if (r == null) continue;
-
-                    if (!world.isRemote) {
-                        onImpact(new RayTraceResult(e, r.hitVec));
-                        if (!isEntityAlive()) break;
-                    }
-                }
-            } else {
-                Entity exclude = (thrower != null && ticksInAir < selfDelay) ? thrower : this;
-                RayTraceResult entityHit = Library.rayTraceEntities(world, exclude, start, entityEnd, 0.3D, Entity::isEntityAlive);
-                if (entityHit != null) {
-                    hit = entityHit;
-                }
-            }
-        }
-
-        if (hit != null) {
-            if (hit.typeOfHit == RayTraceResult.Type.BLOCK && world.getBlockState(hit.getBlockPos()).getBlock() == Blocks.PORTAL) {
-                setPortal(hit.getBlockPos());
-            } else if (!ForgeEventFactory.onProjectileImpact(this, hit)) {
-                onImpact(hit);
-            }
-        }
-
-        posX += mx;
-        posY += my;
-        posZ += mz;
-
-        double horiz = Math.sqrt(motionX * motionX + motionZ * motionZ);
-        rotationYaw = (float) (Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
-        rotationPitch = (float) (Math.atan2(motionY, horiz) * 180.0D / Math.PI);
-        while (rotationPitch - prevRotationPitch < -180.0F) prevRotationPitch -= 360.0F;
-        while (rotationPitch - prevRotationPitch >= 180.0F) prevRotationPitch += 360.0F;
-        while (rotationYaw - prevRotationYaw < -180.0F) prevRotationYaw -= 360.0F;
-        while (rotationYaw - prevRotationYaw >= 180.0F) prevRotationYaw += 360.0F;
-
-        rotationPitch = prevRotationPitch + (rotationPitch - prevRotationPitch) * 0.2F;
-        rotationYaw = prevRotationYaw + (rotationYaw - prevRotationYaw) * 0.2F;
-
-        float drag = getAirDrag();
-        float gravity = getGravityVelocity();
-
-        if (isInWater()) {
-            for (int j = 0; j < 4; ++j) {
-                world.spawnParticle(EnumParticleTypes.WATER_BUBBLE, posX - motionX * 0.25D, posY - motionY * 0.25D, posZ - motionZ * 0.25D, motionX, motionY, motionZ);
-            }
-            drag = getWaterDrag();
-        }
-
-        motionX *= (double) drag;
-        motionY *= (double) drag;
-        motionZ *= (double) drag;
-
-        if (!hasNoGravity()) {
-            motionY -= (double) gravity;
-        }
-
-        setPosition(posX, posY, posZ);
-    }
-
     public void getStuck(BlockPos pos, int side) {
-        xTile = pos.getX();
-        yTile = pos.getY();
-        zTile = pos.getZ();
-        inTile = world.getBlockState(pos).getBlock();
-
+        stuckBlockX = pos.getX();
+        stuckBlockY = pos.getY();
+        stuckBlockZ = pos.getZ();
+        stuckBlock = world.getBlockState(pos).getBlock();
         inGround = true;
-        motionX = 0.0D;
-        motionY = 0.0D;
-        motionZ = 0.0D;
-
+        motionX = 0;
+        motionY = 0;
+        motionZ = 0;
         setStuckIn(side);
         TrackerUtil.sendTeleport(world, this);
+    }
+
+    public float getGravityVelocity() {
+        return 0.03F;
+        //Why 0.03? this is overridden in every child class no?
+    }
+
+    protected abstract void onImpact(RayTraceResult result);
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound compound) {
+        compound.setInteger("xTile", stuckBlockX);
+        compound.setInteger("yTile", stuckBlockY);
+        compound.setInteger("zTile", stuckBlockZ);
+        compound.setByte("inTile", (byte) Block.getIdFromBlock(stuckBlock));
+        compound.setByte("shake", (byte) throwableShake);
+        compound.setByte("inGround", (byte) (inGround ? 1 : 0));
+
+        if ((throwerName == null || throwerName.isEmpty()) && thrower instanceof EntityPlayer) {
+            throwerName = thrower.getCommandSenderEntity().getName();
+        }
+
+        compound.setString("ownerName", throwerName == null ? "" : throwerName);
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound compound) {
+        stuckBlockX = compound.getShort("xTile");
+        stuckBlockY = compound.getShort("yTile");
+        stuckBlockZ = compound.getShort("zTile");
+        stuckBlock = Block.getBlockById(compound.getByte("inTile") & 255);
+
+        throwableShake = compound.getByte("shake") & 255;
+        inGround = compound.getByte("inGround") == 1;
+
+        throwerName = compound.getString("ownerName");
+        if (throwerName != null && throwerName.isEmpty()) throwerName = null;
+    }
+
+    public EntityLivingBase getThrower() {
+        if (thrower == null && throwerName != null && throwerName.length() > 0) {
+            thrower = world.getPlayerEntityByName(throwerName);
+        }
+        return thrower;
     }
 
     @Override
