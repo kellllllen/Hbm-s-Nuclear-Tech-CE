@@ -393,16 +393,19 @@ public class BlockRebar extends BlockContainer implements IDynamicModels {
         @Override
         public void onChunkUnload() {
             super.onChunkUnload();
-            if (ACTIVE != null) ACTIVE.remove(this);
+            if (world.isRemote) ACTIVE.remove(this);
         }
 
         @Override
         public void invalidate() {
             super.invalidate();
-            if (ACTIVE != null) ACTIVE.remove(this);
-            if (world != null && !world.isRemote) {
-                if (node != null) {
-                    UniNodespace.destroyNode(world, pos, RebarNetwork.THE_PROVIDER);
+            if (world != null) {
+                if (world.isRemote) {
+                    ACTIVE.remove(this);
+                } else {
+                    if (node != null) {
+                        UniNodespace.destroyNode(world, pos, RebarNetwork.THE_PROVIDER);
+                    }
                 }
             }
         }
