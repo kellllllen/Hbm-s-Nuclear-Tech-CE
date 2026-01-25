@@ -46,7 +46,6 @@ public class TileEntityBatterySocket extends TileEntityBatteryBase {
         long prevPower = this.getPower();
 
         super.update();
-
         if (!world.isRemote) {
 
             long avg = (this.getPower() + prevPower) / 2;
