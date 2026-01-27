@@ -78,7 +78,7 @@ public class PhasedStructureGenerator implements IWorldGenerator {
             int absChunkX = originChunkX + relChunkX;
             int absChunkZ = originChunkZ + relChunkZ;
 
-            structure.generateForChunk(world, rand, originSerialized, absChunkX, absChunkZ, blocksForThisChunk);
+            structure.generateForChunk(world, rand, originSerialized, blocksForThisChunk);
         }
         structure.postGenerate(world, rand, originSerialized);
     }
@@ -807,9 +807,7 @@ public class PhasedStructureGenerator implements IWorldGenerator {
             ensureLayout();
             remainingChunks.clear();
             components.clear();
-            if (layout != null) {
-                components.ensureCapacity(layout.size());
-            }
+            components.ensureCapacity(layout.size());
 
             DimensionState state = PhasedEventHandler.getState(dimension);
             int originChunkX = Library.getBlockPosX(finalOrigin) >> 4;
@@ -906,7 +904,7 @@ public class PhasedStructureGenerator implements IWorldGenerator {
                 try {
                     structure.postGenerate(world, rand, finalOrigin);
                 } catch (Exception e) {
-                    MainRegistry.logger.error("Error running postGenerate for {}", structure != null ? structure.getClass().getSimpleName() : "<null>", e);
+                    MainRegistry.logger.error("Error running postGenerate for {}", structure.getClass().getSimpleName(), e);
                 } finally {
                     RandomPool.recycle(rand);
                 }
@@ -1040,7 +1038,7 @@ public class PhasedStructureGenerator implements IWorldGenerator {
 
             Random rand = RandomPool.borrow(localParent.chunkSeed(absChunkX, absChunkZ));
             try {
-                localParent.structure.generateForChunk(worldIn, rand, localParent.finalOrigin, absChunkX, absChunkZ, blocks);
+                localParent.structure.generateForChunk(worldIn, rand, localParent.finalOrigin, blocks);
             } finally {
                 RandomPool.recycle(rand);
             }

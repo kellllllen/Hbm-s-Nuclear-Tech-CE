@@ -171,7 +171,9 @@ public abstract class AbstractPhasedStructure extends WorldGenerator implements 
 
     protected void logGenerationSuccess(World world, long origin) {
         if (GeneralConfig.enableDebugWorldGen) {
-            MainRegistry.logger.info("[PhasedGen] Structure {} scheduled for generation at {}", getClass().getSimpleName(), origin);
+            MainRegistry.logger.info("[PhasedGen] Structure {} scheduled for generation at BlockPos {}, {}, {} " +
+                    "in dimension {} ({})", getClass().getSimpleName(), Library.getBlockPosX(origin), Library.getBlockPosY(origin),
+            Library.getBlockPosZ(origin), world.provider.getDimension(), world.provider.getDimensionType().getName());
         }
     }
 
@@ -205,7 +207,7 @@ public abstract class AbstractPhasedStructure extends WorldGenerator implements 
     }
 
     @Override
-    public final void generateForChunk(World world, Random rand, long structureOrigin, int chunkX, int chunkZ, Long2ObjectOpenHashMap<@NotNull Object> blocksForThisChunk) {
+    public final void generateForChunk(World world, Random rand, long structureOrigin, Long2ObjectOpenHashMap<@NotNull Object> blocksForThisChunk) {
         if (blocksForThisChunk.isEmpty()) return;
 
         ObjectIterator<Long2ObjectMap.Entry<Object>> iterator = blocksForThisChunk.long2ObjectEntrySet().fastIterator();

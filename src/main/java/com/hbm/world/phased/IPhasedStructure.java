@@ -3,7 +3,6 @@ package com.hbm.world.phased;
 import com.hbm.config.GeneralConfig;
 import com.hbm.lib.Library;
 import com.hbm.main.MainRegistry;
-import com.hbm.world.phased.AbstractPhasedStructure.BlockInfo;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.world.World;
@@ -21,7 +20,7 @@ public interface IPhasedStructure {
      * @param structureOrigin The absolute origin (corner) of the entire structure in the world.
      * @param blockInfos      The blocks to generate keyed by serialized relative pos.
      */
-    void generateForChunk(World world, Random rand, long structureOrigin, int chunkX, int chunkZ, Long2ObjectOpenHashMap<@NotNull Object> blockInfos);
+    void generateForChunk(World world, Random rand, long structureOrigin, Long2ObjectOpenHashMap<@NotNull Object> blockInfos);
 
     @Nullable
     default PhasedStructureGenerator.ReadyToGenerateStructure validate(WorldServer world, PhasedStructureGenerator.PendingValidationStructure pending) {

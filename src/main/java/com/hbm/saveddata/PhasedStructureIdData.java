@@ -56,7 +56,10 @@ public class PhasedStructureIdData {
     private static ReadResult readFile(File file) {
         int loadedEpoch = -1;
 
-        try (DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(file))))) {
+        try (FileInputStream fis = new FileInputStream(file);
+             BufferedInputStream bis = new BufferedInputStream(fis);
+             GZIPInputStream gis = new GZIPInputStream(bis);
+             DataInputStream in = new DataInputStream(gis)) {
 
             if (in.readInt() != VERSION) {
                 return ReadResult.failed(-1);
