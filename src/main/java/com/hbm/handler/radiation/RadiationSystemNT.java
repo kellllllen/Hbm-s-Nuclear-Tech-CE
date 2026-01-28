@@ -18,6 +18,7 @@ import com.hbm.packet.toclient.AuxParticlePacketNT;
 import com.hbm.saveddata.AuxSavedData;
 import com.hbm.util.DecodeException;
 import com.hbm.util.ObjectPool;
+import com.hbm.util.SectionKeyHash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
@@ -844,7 +845,7 @@ public final class RadiationSystemNT {
 
     private static long pocketKey(long sectionKey, int pocketIndex) {
         int sy = Library.getSectionY(sectionKey);
-        // sectionKey allows sy ∈ [-524_288, 524_287]
+        // x22 | z22 | y20
         return Library.setSectionY(sectionKey, (sy << 4) | (pocketIndex & 15));
     }
 
@@ -1973,21 +1974,31 @@ public final class RadiationSystemNT {
         final long worldSalt;
         final NonBlockingHashMapLong<ChunkRef> chunkRefs = new NonBlockingHashMapLong<>(4096, false);
         final LongOpenHashSet pendingUnloads = new LongOpenHashSet(256);
-        final NonBlockingHashSetLong dirtySections = new NonBlockingHashSetLong(16384);
+        final NonBlockingHashSetLong dirtySections = new NonBlockingHashSetLong(16384) {
+            @Override
+            protected int hash(long key) {
+                return SectionKeyHash.hash(key);
+            }
+        };
         // reserved value: Long.MIN_VALUE
         final MpscUnboundedXaddArrayLongQueue dirtyQueue = new MpscUnboundedXaddArrayLongQueue(16384);
         // only used when tickrate != 1.
         final MpscUnboundedXaddArrayLongQueue destructionQueue = new MpscUnboundedXaddArrayLongQueue(64);
         final TLPool<byte[]> pocketDataPool = new TLPool<>(() -> new byte[2048], _ -> /*@formatter:off*/{}/*@formatter:on*/, 256, 4096);
         final SectionRetireBag retiredSections = new SectionRetireBag(16384);
-        final NonBlockingLong2LongHashMap pendingPocketRadBits = new NonBlockingLong2LongHashMap(16384);
+        final NonBlockingLong2LongHashMap pendingPocketRadBits = new NonBlockingLong2LongHashMap(16384) {
+            @Override
+            protected int hash(long key) {
+                return SectionKeyHash.hash(key);
+            }
+        };
         final LongArrayList dirtyToRebuildScratch = new LongArrayList(16384);
         final Long2IntOpenHashMap dirtyChunkMasksScratch = new Long2IntOpenHashMap(16384);
         final double minBound;
         // Pending write queues for unstable sections
-        final Long2ObjectOpenHashMap<Int2DoubleOpenHashMap> writeAdd = new Long2ObjectOpenHashMap<>(256);
-        final Long2ObjectOpenHashMap<Int2DoubleOpenHashMap> writeSet = new Long2ObjectOpenHashMap<>(64);
-        final LongOpenHashSet hasSet = new LongOpenHashSet(256);
+        final Long2ObjectOpenCustomHashMap<Int2DoubleOpenHashMap> writeAdd = new Long2ObjectOpenCustomHashMap<>(256, SectionKeyHash.STRATEGY);
+        final Long2ObjectOpenCustomHashMap<Int2DoubleOpenHashMap> writeSet = new Long2ObjectOpenCustomHashMap<>(64, SectionKeyHash.STRATEGY);
+        final LongOpenCustomHashSet hasSet = new LongOpenCustomHashSet(256, SectionKeyHash.STRATEGY);
         final ObjectPool<Int2DoubleOpenHashMap> localMapPool = new ObjectPool<>(Int2DoubleOpenHashMap::new, Int2DoubleOpenHashMap::clear, 64);
         final int[] activeStripeOffsets = new int[ACTIVE_STRIPES];
         final int[][] parityStripeCounts = new int[ACTIVE_STRIPES][4];
@@ -3322,7 +3333,6 @@ public final class RadiationSystemNT {
                     long[] chunk = bag.chunks[i >>> LongBag.CHUNK_SHIFT];
                     out[i] = chunk[i & LongBag.CHUNK_MASK];
                 }
-                for (int i = 0; i < n; i++) out[i] = Long.rotateLeft(out[i], 20);
                 Arrays.sort(out, 0, n);
                 int u = 0;
                 long prev = Long.MIN_VALUE;
@@ -3331,7 +3341,6 @@ public final class RadiationSystemNT {
                     if (i == 0 || v != prev) out[u++] = v;
                     prev = v;
                 }
-                for (int i = 0; i < u; i++) out[i] = Long.rotateRight(out[i], 20);
                 int[] rs = wokenRunStarts;
                 if (rs.length < u + 1) wokenRunStarts = rs = new int[u + 1];
 
@@ -3576,7 +3585,7 @@ public final class RadiationSystemNT {
                         outPockets = Arrays.copyOf(outPockets, outPockets.length << 1);
                         activeStripeBufs[stripe] = outPockets;
                     }
-                    outPockets[qCount++] = Long.rotateLeft(pk, 20);
+                    outPockets[qCount++] = pk;
                 }
                 U.putLong(q, CI_OFF, cIndex);
                 U.putReference(q, CC_OFF, cChunk);
@@ -3603,25 +3612,24 @@ public final class RadiationSystemNT {
                 int prevPocketCount = activeStripeCounts[stripe];
                 int prevTouchedCount = touchedStripeCounts[stripe];
                 while (readIdx < qCount) {
-                    long groupRotatedKey = outPockets[readIdx];
-                    if (readIdx > 0 && groupRotatedKey == outPockets[readIdx - 1]) {
+                    long groupKey = outPockets[readIdx];
+                    if (readIdx > 0 && groupKey == outPockets[readIdx - 1]) {
                         readIdx++;
                         continue;
                     }
-                    long ck = Library.sectionToChunkLong(Long.rotateRight(groupRotatedKey, 20));
+                    long ck = Library.sectionToChunkLong(groupKey);
                     ChunkRef cr = chunkRefs.get(ck);
                     boolean chunkHasActivePockets = false;
                     while (readIdx < qCount) {
-                        long nextRotated = outPockets[readIdx];
-                        if ((nextRotated & 0xFFFFFFFFFFF00000L) != (groupRotatedKey & 0xFFFFFFFFFFF00000L)) break;
-                        if (readIdx > 0 && nextRotated == outPockets[readIdx - 1]) {
+                        long nextKey = outPockets[readIdx];
+                        if ((nextKey & 0xFFFFFFFFFFF00000L) != (groupKey & 0xFFFFFFFFFFF00000L)) break;
+                        if (readIdx > 0 && nextKey == outPockets[readIdx - 1]) {
                             readIdx++;
                             continue;
                         }
                         readIdx++;
                         if (cr == null) continue;
-                        long realPk = Long.rotateRight(nextRotated, 20);
-                        int yz = Library.getSectionY(realPk), sy = (yz >>> 4) & 15, pi = yz & 15;
+                        int yz = Library.getSectionY(nextKey), sy = (yz >>> 4) & 15, pi = yz & 15;
                         if (cr.isInactive(sy, pi)) continue;
                         int kind = cr.getKind(sy);
                         if (kind == ChunkRef.KIND_UNI) {
@@ -3630,7 +3638,7 @@ public final class RadiationSystemNT {
                                 continue;
                             }
                             if (cr.markUniEpoch(sy, epoch)) {
-                                outPockets[pocketWriteIdx] = realPk;
+                                outPockets[pocketWriteIdx] = nextKey;
                                 outRefs[pocketWriteIdx] = null;
                                 outChunkRefs[pocketWriteIdx++] = cr;
                                 chunkHasActivePockets = true;
@@ -3642,7 +3650,7 @@ public final class RadiationSystemNT {
                             }
                             SingleMaskedSectionRef single = (SingleMaskedSectionRef) cr.sec[sy];
                             if (single.markWakeEpoch(epoch)) {
-                                outPockets[pocketWriteIdx] = realPk;
+                                outPockets[pocketWriteIdx] = nextKey;
                                 outRefs[pocketWriteIdx] = single;
                                 outChunkRefs[pocketWriteIdx++] = cr;
                                 chunkHasActivePockets = true;
@@ -3650,7 +3658,7 @@ public final class RadiationSystemNT {
                         } else { // MULTI
                             MultiSectionRef multi = (MultiSectionRef) cr.sec[sy];
                             if (multi.markWakeEpoch(pi, epoch)) {
-                                outPockets[pocketWriteIdx] = realPk;
+                                outPockets[pocketWriteIdx] = nextKey;
                                 outRefs[pocketWriteIdx] = multi;
                                 outChunkRefs[pocketWriteIdx++] = cr;
                                 chunkHasActivePockets = true;
