@@ -51,6 +51,7 @@ public final class HBMSoundHandler {
     public static SoundEvent tauShoot;
     public static SoundEvent oldExplosion;
     public static SoundEvent nuclearExplosion;
+    public static SoundEvent robinExplosion;
     public static SoundEvent ciwsSpindown;
     public static SoundEvent ciwsSpinup;
     public static SoundEvent ciwsFiringLoop;
@@ -359,6 +360,10 @@ public final class HBMSoundHandler {
     public static SoundEvent meteoriteFallingLoop;
     public static SoundEvent assemblerCut;
     public static SoundEvent fusionReactorRunning;
+    public static SoundEvent plinkShell;
+    public static SoundEvent plinkSmall;
+    public static SoundEvent plinkMedium;
+    public static SoundEvent plinkLarge;
 
     public static SoundEvent alarmHatch = registerBypass("alarm.hatch");
     public static SoundEvent alarmAutopilot = registerBypass("alarm.autopilot");
@@ -410,9 +415,9 @@ public final class HBMSoundHandler {
     public static void init() {
 
         explosionSmallNear = register("weapon.explosion_small_near");
-        explosionSmallFar  = register("weapon.explosion_small_far");
+        explosionSmallFar = register("weapon.explosion_small_far");
         explosionLargeNear = register("weapon.explosion_large_near");
-        explosionLargeFar  = register("weapon.explosion_large_far");
+        explosionLargeFar = register("weapon.explosion_large_far");
         assemblerOperate = register("block.assembleroperate");
         fel = register("block.fel");
         fensuHum = register("block.fensuHum");
@@ -451,6 +456,7 @@ public final class HBMSoundHandler {
         tauShoot = register("weapon.tauShoot");
         oldExplosion = register("entity.oldExplosion");
         nuclearExplosion = register("weapon.nuclearExplosion");
+        robinExplosion = register("weapon.robin_explosion");
         boiler = register("block.boiler");
         boiler_groan1 = register("block.boilerGroan0");
         boiler_groan2 = register("block.boilerGroan1");
@@ -753,6 +759,12 @@ public final class HBMSoundHandler {
         assemblerCut = register("block.assemblerCut");
         tubeFwoomp = register("weapon.reload.tubeFwoomp");
         fusionReactorRunning = register("block.fusionReactorRunning");
+
+
+        plinkShell = register("weapon.casing.shell");
+        plinkSmall = register("weapon.casing.small");
+        plinkMedium = register("weapon.casing.medium");
+        plinkLarge = register("weapon.casing.large");
 
         geigerSounds = new SoundEvent[]{geiger1, geiger2, geiger3, geiger4, geiger5, geiger6};
         voiceSounds = new SoundEvent[]{voices1, voices2, voices3, voices4, voices5, voices6, voices7, voices8};

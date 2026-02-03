@@ -24,6 +24,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderPlayerEvent.Pre;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -107,15 +108,15 @@ public class ItemModGasmask extends ItemArmorMod implements IGasMask {
 	public List<HazardClass> getBlacklist(ItemStack stack) {
 		
 		if(this == ModItems.attachment_mask_mono) {
-			return Arrays.asList(HazardClass.GAS_CHLORINE, HazardClass.GAS_CORROSIVE, HazardClass.NERVE_AGENT,
+			return Arrays.asList(HazardClass.GAS_LUNG, HazardClass.GAS_BLISTERING, HazardClass.BACTERIA,
                     HazardClass.BACTERIA);
 		} else {
-			return Arrays.asList(HazardClass.GAS_CORROSIVE, HazardClass.NERVE_AGENT);
+			return Arrays.asList(HazardClass.GAS_BLISTERING);
 		}
 	}
 
 	@Override
-	public ItemStack getFilter(ItemStack stack) {
+	public @NotNull ItemStack getFilter(ItemStack stack) {
 		return ArmorUtil.getGasMaskFilter(stack);
 	}
 
